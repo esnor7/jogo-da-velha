@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Jogo da Velha</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <h1>Jogo da Velha</h1>
+  <div id="info"></div>
+  <div class="tabuleiro">
+    <div class="celula" id="c0" onclick="marcar(0)"></div>
+    <div class="celula" id="c1" onclick="marcar(1)"></div>
+    <div class="celula" id="c2" onclick="marcar(2)"></div>
+    <div class="celula" id="c3" onclick="marcar(3)"></div>
+    <div class="celula" id="c4" onclick="marcar(4)"></div>
+    <div class="celula" id="c5" onclick="marcar(5)"></div>
+    <div class="celula" id="c6" onclick="marcar(6)"></div>
+    <div class="celula" id="c7" onclick="marcar(7)"></div>
+    <div class="celula" id="c8" onclick="marcar(8)"></div>
+  </div>
+  <div id="mensagemVitoria" style="display:none;"></div>
+  <button onclick="reiniciar()">Reiniciar</button>
+
+  <script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const jogador1 = urlParams.get('j1') || "Jogador 1";
+    const jogador2 = urlParams.get('j2') || "Jogador 2";
+
+    let tabuleiro = ["","","","","","","","",""];
+    let vezX = true;
+    const info = document.getElementById('info');
+    const mensagem = document.getElementById('mensagemVitoria');
+
+    info.innerHTML = `É a vez de: ${jogador1} (X)`;
+
+    function marcar(pos) {
+      if(tabuleiro[pos] !== "" || mensagem.style.display === "block") return;
+
+      tabuleiro[pos] = vezX ? "X" : "O";
+      document.getElementById('c'+pos).textContent = tabuleiro[pos];
+
+      if(verificarVitoria()) return;
+
+      vezX = !vezX;
+      info.innerHTML = `É a vez de: ${vezX ? jogador1 + " (X)" : jogador2 + " (O)"}`;
+    }
+
+    function verificarVitoria() {
+      const combos = [
+        [0,1,2],[3,4,5],[6,7,8],
+        [0,3,6],[1,4,7],[2,5,8],
+        [0,4,8],[2,4,6]
+      ];
+
+      for(let combo of combos){
+        const [a,b,c] = combo;
+        if(tabuleiro[a] && tabuleiro[a] === tabuleiro[b] && tabuleiro[a] === tabuleiro[c]){
+          const vencedor = tabuleiro[a] === "X" ? jogador1 : jogador2;
+          mostrarVitoria(vencedor);
+          return true;
+        }
+      }
+
+      if(!tabuleiro.includes("")){
+        mostrarVitoria("Empate");
+        return true;
+      }
+
+      return false;
+    }
+
+    function mostrarVitoria(vencedor){
+      mensagem.style.display = "block";
+      mensagem.innerHTML = vencedor === "Empate" ? "Empate!" : `🏆 Vitória de ${vencedor}! 🏆`;
+      info.innerHTML = "";
+      startFogos();
+    }
+
+    function reiniciar() {
+      tabuleiro = ["","","","","","","","",""];
+      vezX = true;
+      for(let i=0;i<9;i++){
+        document.getElementById('c'+i).textContent = "";
+      }
+      mensagem.style.display = "none";
+      info.innerHTML = `É a vez de: ${jogador1} (X)`;
+      pararFogos();
+    }
+
+    // ---------- EFEITO DE FOGOS SIMPLES ----------
+    let fogosInterval;
+    function startFogos() {
+      fogosInterval = setInterval(() => {
+        const f = document.createElement("div");
+        f.className = "fogo";
+        f.style.left = Math.random()*90 + "vw";
+        f.style.top = Math.random()*80 + "vh";
+        document.body.appendChild(f);
+        setTimeout(()=>f.remove(),1000);
+      }, 200);
+    }
+
+    function pararFogos() {
+      clearInterval(fogosInterval);
+      document.querySelectorAll(".fogo").forEach(f => f.remove());
+    }
+  </script>
+
+  <style>
+    body { font-family: Arial; background-color: #111; color: #fff; text-align: center; overflow-x:hidden; }
+    .tabuleiro { display: grid; grid-template-columns: repeat(3,100px); grid-gap:5px; justify-content:center; margin:20px auto; }
+    .celula { width:100px; height:100px; background-color:#333; display:flex; justify-content:center; align-items:center; font-size:2em; cursor:pointer; border-radius:8px; }
+    .celula:hover { background-color:#555; }
+    #mensagemVitoria { font-size:2em; margin:20px; color:#ff0; text-shadow: 1px 1px 4px #000; }
+    button { padding:10px 20px; margin-top:20px; cursor:pointer; font-weight:bold; border-radius:8px; background-color:#ff9800; color:#fff; border:none; }
+    button:hover { background-color:#e68a00; }
+    /* fogos */
+    .fogo { position:absolute; width:10px; height:10px; background-color: #ff0; border-radius:50%; animation: explode 0.8s ease-out forwards; }
+    @keyframes explode {
+      0% {transform: scale(1); opacity:1;}
+      100% {transform: scale(4); opacity:0;}
+    }
+  </style>
+</body>
+</html>
