@@ -23,9 +23,15 @@
   <button onclick="reiniciar()">Reiniciar</button>
 
   <script>
+    // ---------- Pegar jogadores da URL ----------
     const urlParams = new URLSearchParams(window.location.search);
-    const jogador1 = urlParams.get('j1') || "Jogador 1";
-    const jogador2 = urlParams.get('j2') || "Jogador 2";
+    const jogador1 = urlParams.get('j1');
+    const jogador2 = urlParams.get('j2');
+
+    if(!jogador1 || !jogador2){
+      alert("Nenhum jogador definido! Redirecionando para cadastro/login.");
+      window.location.href = "index.html";
+    }
 
     let tabuleiro = ["","","","","","","","",""];
     let vezX = true;
