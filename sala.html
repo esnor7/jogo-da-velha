@@ -82,9 +82,9 @@
       let par = pares[parNumero-1];
       const jogador1 = document.getElementById('slot' + par[0]).textContent;
       const jogador2 = document.getElementById('slot' + par[1]).textContent;
-      alert(`Iniciando partida entre ${jogador1} e ${jogador2}!\nAqui você pode gerar o link do jogo.`);
-      // Depois podemos colocar link real do jogo da velha:
-      // window.location.href = `jogo.html?j1=${jogador1}&j2=${jogador2}`
+
+      // Redireciona para jogo.html passando os jogadores na URL
+      window.location.href = `jogo.html?j1=${encodeURIComponent(jogador1)}&j2=${encodeURIComponent(jogador2)}`;
     }
   </script>
 
