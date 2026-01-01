@@ -2,26 +2,90 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
-  <title>Cadastro / Login</title>
+  <title>Login / Cadastro</title>
   <link rel="stylesheet" href="style.css">
+  <!-- Desativa autocomplete para evitar interferência do navegador -->
+  <meta name="autocomplete" content="off">
 </head>
 <body>
-  <h1>Cadastro / Login</h1>
+  <h1>Bem-vindo!</h1>
 
-  <div id="cadastro">
-    <h2>Cadastrar</h2>
-    <input type="text" id="novoUsuario" placeholder="Usuário">
-    <input type="password" id="novaSenha" placeholder="Senha">
-    <button onclick="cadastrar()">Cadastrar</button>
-  </div>
-
-  <div id="login">
+  <!-- ===== LOGIN ===== -->
+  <div id="loginContainer">
     <h2>Login</h2>
-    <input type="text" id="usuarioLogin" placeholder="Usuário">
-    <input type="password" id="senhaLogin" placeholder="Senha">
+    <input type="text" id="usuarioLogin" placeholder="Usuário" autocomplete="off">
+    <input type="password" id="senhaLogin" placeholder="Senha" autocomplete="new-password">
     <button onclick="logar()">Entrar</button>
+    <p>Não tem conta ainda? <span onclick="mostrarCadastro()">Cadastre-se</span></p>
   </div>
 
-  <script src="script.js"></script>
+  <!-- ===== CADASTRO ===== -->
+  <div id="cadastroContainer" style="display:none;">
+    <h2>Cadastro</h2>
+    <input type="text" id="novoUsuario" placeholder="Usuário" autocomplete="off">
+    <input type="password" id="novaSenha" placeholder="Senha" autocomplete="new-password">
+    <button onclick="cadastrar()">Cadastrar</button>
+    <p>Já tem conta? <span onclick="mostrarLogin()">Faça login</span></p>
+  </div>
+
+  <script>
+    // Alternar entre login e cadastro
+    function mostrarCadastro() {
+      document.getElementById('loginContainer').style.display = 'none';
+      document.getElementById('cadastroContainer').style.display = 'block';
+    }
+
+    function mostrarLogin() {
+      document.getElementById('cadastroContainer').style.display = 'none';
+      document.getElementById('loginContainer').style.display = 'block';
+    }
+
+    // ===== CADASTRO =====
+    function cadastrar() {
+      const usuario = document.getElementById('novoUsuario').value.trim();
+      const senha = document.getElementById('novaSenha').value.trim();
+
+      if(!usuario || !senha) {
+        alert('Preencha usuário e senha para cadastrar.');
+        return;
+      }
+
+      let usuarios = JSON.parse(localStorage.getItem('usuarios') || '{}');
+
+      if(usuarios[usuario]) {
+        alert('Usuário já existe!');
+        return;
+      }
+
+      usuarios[usuario] = senha;
+      localStorage.setItem('usuarios', JSON.stringify(usuarios));
+      alert('Cadastro realizado com sucesso! Faça login.');
+
+      // Limpa campos e volta para login
+      document.getElementById('novoUsuario').value = '';
+      document.getElementById('novaSenha').value = '';
+      mostrarLogin();
+    }
+
+    // ===== LOGIN =====
+    function logar() {
+      const usuario = document.getElementById('usuarioLogin').value.trim();
+      const senha = document.getElementById('senhaLogin').value.trim();
+
+      if(!usuario || !senha) {
+        alert('Preencha usuário e senha.');
+        return;
+      }
+
+      let usuarios = JSON.parse(localStorage.getItem('usuarios') || '{}');
+
+      if(usuarios[usuario] && usuarios[usuario] === senha) {
+        alert('Login bem-sucedido! Redirecionando para a sala...');
+        window.location.href = "sala.html";
+      } else {
+        alert('Usuário ou senha incorretos!');
+      }
+    }
+  </script>
 </body>
 </html>
