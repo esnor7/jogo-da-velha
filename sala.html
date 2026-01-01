@@ -2,151 +2,118 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
-  <title>Sala de Jogo</title>
-  <link rel="stylesheet" href="style.css">
+  <title>Sala de Jogo da Velha</title>
 </head>
 <body>
   <h1>Sala de Jogo da Velha</h1>
 
-  <!-- ===== ENTRAR COM NOME ===== -->
+  <!-- ENTRAR COM NOME -->
   <div id="inputNome">
     <p>Digite seu nome:</p>
     <input type="text" id="nomeJogador" placeholder="Seu nome">
-    <button onclick="entrarSala()">Entrar na Sala</button>
+    <button onclick="entrarSala()">Entrar</button>
   </div>
 
-  <!-- ===== SALA ===== -->
-  <div id="sala" class="sala" style="display:none;">
-    <!-- Par 1 -->
-    <div class="slot" id="slot1" onclick="sentar(1)">Lugar 1</div>
-    <div class="slot" id="slot2" onclick="sentar(2)">Lugar 2</div>
-    <button id="btn1" class="botaoJogar" onclick="iniciarPartida(1)" style="display:none">Jogar!</button>
+  <!-- SALA -->
+  <div id="sala" style="display:none;">
+    <div class="linha">
+      <div class="slot" id="slot1" onclick="sentar(1)">Lugar 1</div>
+      <div class="slot" id="slot2" onclick="sentar(2)">Lugar 2</div>
+    </div>
 
-    <!-- Par 2 -->
-    <div class="slot" id="slot3" onclick="sentar(3)">Lugar 3</div>
-    <div class="slot" id="slot4" onclick="sentar(4)">Lugar 4</div>
-    <button id="btn2" class="botaoJogar" onclick="iniciarPartida(2)" style="display:none">Jogar!</button>
-
-    <!-- Par 3 -->
-    <div class="slot" id="slot5" onclick="sentar(5)">Lugar 5</div>
-    <div class="slot" id="slot6" onclick="sentar(6)">Lugar 6</div>
-    <button id="btn3" class="botaoJogar" onclick="iniciarPartida(3)" style="display:none">Jogar!</button>
+    <div class="linha">
+      <div class="slot" id="slot3" onclick="sentar(3)">Lugar 3</div>
+      <div class="slot" id="slot4" onclick="sentar(4)">Lugar 4</div>
+    </div>
   </div>
 
-  <!-- ===== FIREBASE ===== -->
+  <!-- FIREBASE -->
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
 
   <script>
-    const firebaseConfig = {
+    firebase.initializeApp({
       apiKey: "AIzaSyAMPqH-lyB4X_whlGIW189rd5KVi2fM-IE",
       authDomain: "jogo-da-velha-online-36836.firebaseapp.com",
       databaseURL: "https://jogo-da-velha-online-36836-default-rtdb.firebaseio.com",
-      projectId: "jogo-da-velha-online-36836",
-      storageBucket: "jogo-da-velha-online-36836.appspot.com",
-      messagingSenderId: "1067127105922",
-      appId: "1:1067127105922:web:18a6a4f194711d4973479b"
-    };
-
-    if (!firebase.apps.length) {
-      firebase.initializeApp(firebaseConfig);
-    }
+      projectId: "jogo-da-velha-online-36836"
+    });
 
     const db = firebase.database();
-  </script>
 
-  <!-- ===== SCRIPT DA SALA ===== -->
-  <script>
     let usuario = "";
-    let jaSentou = false;
+    let meuSlot = null;
 
-    const pares = [
-      [1, 2, 'btn1'],
-      [3, 4, 'btn2'],
-      [5, 6, 'btn3']
-    ];
+    const pares = {
+      1: 2,
+      2: 1,
+      3: 4,
+      4: 3
+    };
 
     function entrarSala() {
-      const nome = document.getElementById('nomeJogador').value.trim();
-      if (!nome) {
-        alert("Digite seu nome!");
-        return;
-      }
+      const nome = document.getElementById("nomeJogador").value.trim();
+      if (!nome) return alert("Digite seu nome!");
 
       usuario = nome;
-      document.getElementById('inputNome').style.display = 'none';
-      document.getElementById('sala').style.display = 'flex';
+      document.getElementById("inputNome").style.display = "none";
+      document.getElementById("sala").style.display = "block";
     }
 
     function sentar(id) {
-      if (!usuario) {
-        alert("Digite seu nome primeiro!");
-        return;
-      }
-
-      if (jaSentou) {
-        alert("Você já está sentado!");
-        return;
-      }
+      if (!usuario) return alert("Digite seu nome primeiro!");
+      if (meuSlot) return alert("Você já está sentado!");
 
       const ref = db.ref("sala/slots/" + id);
 
-      ref.once("value").then(snapshot => {
-        if (snapshot.exists()) {
-          alert("Lugar já ocupado!");
+      ref.once("value").then(snap => {
+        if (snap.exists()) {
+          alert("Lugar ocupado!");
         } else {
           ref.set(usuario);
+          meuSlot = id;
 
-          // 🔥 Remove automaticamente ao sair do site
-          ref.onDisconnect().remove();
-
-          jaSentou = true;
+          // remove se sair do site
+          window.addEventListener("beforeunload", () => ref.remove());
         }
       });
     }
 
-    // Atualiza sala em tempo real
-    db.ref("sala/slots").on("value", snapshot => {
-      const dados = snapshot.val() || {};
+    db.ref("sala/slots").on("value", snap => {
+      const dados = snap.val() || {};
 
-      for (let i = 1; i <= 6; i++) {
-        const slot = document.getElementById("slot" + i);
-
+      for (let i = 1; i <= 4; i++) {
+        const el = document.getElementById("slot" + i);
         if (dados[i]) {
-          slot.textContent = dados[i];
-          slot.style.backgroundColor = "#4CAF50";
+          el.textContent = dados[i];
+          el.style.background = "#4CAF50";
         } else {
-          slot.textContent = "Lugar " + i;
-          slot.style.backgroundColor = "#333";
+          el.textContent = "Lugar " + i;
+          el.style.background = "#333";
         }
       }
 
-      pares.forEach(par => {
-        const btn = document.getElementById(par[2]);
-        btn.style.display = (dados[par[0]] && dados[par[1]]) ? "inline-block" : "none";
-      });
+      // inicia automático se o par completar
+      if (meuSlot && dados[meuSlot] && dados[pares[meuSlot]]) {
+        const j1 = dados[meuSlot];
+        const j2 = dados[pares[meuSlot]];
+        const jogoId = `${j1}_vs_${j2}`.replace(/\s/g, "_");
+        window.location.href = `jogo.html?j1=${encodeURIComponent(j1)}&j2=${encodeURIComponent(j2)}&id=${jogoId}`;
+      }
     });
-
-    function iniciarPartida(parNumero) {
-      const par = pares[parNumero - 1];
-      const jogador1 = document.getElementById('slot' + par[0]).textContent;
-      const jogador2 = document.getElementById('slot' + par[1]).textContent;
-
-      window.location.href =
-        `jogo.html?j1=${encodeURIComponent(jogador1)}&j2=${encodeURIComponent(jogador2)}`;
-    }
   </script>
 
   <style>
-    body { font-family: Arial; background-color: #111; color: #fff; text-align: center; }
-    .sala { display: flex; flex-wrap: wrap; justify-content: center; max-width: 500px; margin: 20px auto; }
-    .slot { width: 120px; height: 80px; background-color: #333; margin: 10px; display: flex; justify-content: center; align-items: center; cursor: pointer; font-weight: bold; border-radius: 8px; }
-    .slot:hover { background-color: #555; }
-    .botaoJogar { width: 120px; height: 40px; margin: 10px; border-radius: 8px; background-color: #ff9800; color: #fff; font-weight: bold; cursor: pointer; border: none; }
-    .botaoJogar:hover { background-color: #e68a00; }
-    #inputNome { margin-bottom: 20px; }
-    #inputNome input { padding: 5px; margin: 5px; }
-    #inputNome button { padding: 5px 10px; margin: 5px; cursor: pointer; }
+    body { background:#111; color:#fff; text-align:center; font-family:Arial }
+    .linha { display:flex; justify-content:center }
+    .slot {
+      width:120px; height:80px; margin:10px;
+      background:#333; display:flex;
+      justify-content:center; align-items:center;
+      cursor:pointer; border-radius:8px;
+      font-weight:bold;
+    }
+    .slot:hover { background:#555 }
   </style>
 </body>
 </html>
