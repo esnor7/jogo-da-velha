@@ -58,6 +58,7 @@
   <!-- ===== SCRIPT DA SALA ===== -->
   <script>
     let usuario = "";
+    let jaSentou = false;
 
     const pares = [
       [1, 2, 'btn1'],
@@ -83,6 +84,11 @@
         return;
       }
 
+      if (jaSentou) {
+        alert("Você já está sentado!");
+        return;
+      }
+
       const ref = db.ref("sala/slots/" + id);
 
       ref.once("value").then(snapshot => {
@@ -90,6 +96,7 @@
           alert("Lugar já ocupado!");
         } else {
           ref.set(usuario);
+          jaSentou = true;
         }
       });
     }
@@ -110,13 +117,9 @@
         }
       }
 
-      // Mostrar botão Jogar automaticamente
       pares.forEach(par => {
-        const slotA = dados[par[0]];
-        const slotB = dados[par[1]];
         const btn = document.getElementById(par[2]);
-
-        btn.style.display = (slotA && slotB) ? "inline-block" : "none";
+        btn.style.display = (dados[par[0]] && dados[par[1]]) ? "inline-block" : "none";
       });
     });
 
