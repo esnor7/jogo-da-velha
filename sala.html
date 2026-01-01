@@ -40,21 +40,24 @@
     });
 
     const db = firebase.database();
-    let usuario = localStorage.getItem("usuario") || "";
+
+    let usuario = localStorage.getItem("usuario"); // pega nome salvo
     let meuSlot = null;
 
-    const pares = { 1: 2, 2: 1, 3: 4, 4: 3 };
+    const pares = { 1:2, 2:1, 3:4, 4:3 };
 
-    // Se já tem usuário salvo, entra direto
-    if (usuario) entrarSala();
+    // se já tiver nome, vai direto para a sala
+    if (usuario) {
+      document.getElementById("inputNome").style.display = "none";
+      document.getElementById("sala").style.display = "block";
+    }
 
     function entrarSala() {
-      if (!usuario) {
-        const nome = document.getElementById("nomeJogador").value.trim();
-        if (!nome) return alert("Digite seu nome!");
-        usuario = nome;
-        localStorage.setItem("usuario", usuario);
-      }
+      const nome = document.getElementById("nomeJogador").value.trim();
+      if (!nome) return alert("Digite seu nome!");
+
+      usuario = nome;
+      localStorage.setItem("usuario", usuario); // salva localmente
       document.getElementById("inputNome").style.display = "none";
       document.getElementById("sala").style.display = "block";
     }
@@ -64,6 +67,7 @@
       if (meuSlot) return alert("Você já está sentado!");
 
       const ref = db.ref("sala/slots/" + id);
+
       ref.once("value").then(snap => {
         if (snap.exists()) {
           alert("Lugar ocupado!");
@@ -71,7 +75,7 @@
           ref.set(usuario);
           meuSlot = id;
 
-          // Remove se sair do site
+          // remove se sair do site
           window.addEventListener("beforeunload", () => ref.remove());
         }
       });
@@ -96,11 +100,6 @@
         const j1 = dados[meuSlot];
         const j2 = dados[pares[meuSlot]];
         const jogoId = `${j1}_vs_${j2}`.replace(/\s/g, "_");
-
-        // Remove os slots do par antes de ir pro jogo
-        db.ref("sala/slots/" + meuSlot).remove();
-        db.ref("sala/slots/" + pares[meuSlot]).remove();
-
         window.location.href = `jogo.html?j1=${encodeURIComponent(j1)}&j2=${encodeURIComponent(j2)}&id=${jogoId}`;
       }
     });
