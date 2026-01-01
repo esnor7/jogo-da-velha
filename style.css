@@ -1,18 +1,166 @@
+/* ===================== */
+/* Estilo Geral do Site  */
+/* ===================== */
+
 body {
   font-family: Arial, sans-serif;
   background-color: #111;
   color: #fff;
   text-align: center;
-  padding: 50px;
+  margin: 0;
+  padding: 0 20px;
+}
+
+h1, h2 {
+  margin: 20px 0 10px;
+  font-weight: bold;
+}
+
+p {
+  margin: 10px 0;
 }
 
 input {
-  padding: 5px;
+  padding: 8px;
   margin: 5px;
+  border-radius: 5px;
+  border: none;
+  outline: none;
+  font-size: 1em;
 }
 
 button {
-  padding: 5px 10px;
+  padding: 8px 15px;
   margin: 5px;
   cursor: pointer;
+  border-radius: 5px;
+  border: none;
+  font-weight: bold;
+  background-color: #ff9800;
+  color: #fff;
+  transition: background-color 0.2s;
+}
+
+button:hover {
+  background-color: #e68a00;
+}
+
+/* ===================== */
+/* Links de alternar login/cadastro */
+span {
+  color: #ff9800;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+/* ===================== */
+/* Sala de Jogo           */
+/* ===================== */
+
+.sala {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  max-width: 600px;
+  margin: 20px auto;
+}
+
+.slot {
+  width: 120px;
+  height: 80px;
+  background-color: #333;
+  margin: 10px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  font-weight: bold;
+  border-radius: 8px;
+  transition: background-color 0.2s;
+}
+
+.slot:hover {
+  background-color: #555;
+}
+
+.botaoJogar {
+  width: 120px;
+  height: 40px;
+  margin: 10px;
+  border-radius: 8px;
+  background-color: #ff9800;
+  color: #fff;
+  font-weight: bold;
+  cursor: pointer;
+  border: none;
+}
+
+.botaoJogar:hover {
+  background-color: #e68a00;
+}
+
+/* ===================== */
+/* Jogo da Velha          */
+/* ===================== */
+
+.tabuleiro {
+  display: grid;
+  grid-template-columns: repeat(3, 100px);
+  grid-gap: 5px;
+  justify-content: center;
+  margin: 20px auto;
+}
+
+.celula {
+  width: 100px;
+  height: 100px;
+  background-color: #333;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 2em;
+  cursor: pointer;
+  border-radius: 8px;
+  transition: background-color 0.2s;
+}
+
+.celula:hover {
+  background-color: #555;
+}
+
+#mensagemVitoria {
+  font-size: 2em;
+  margin: 20px;
+  color: #ff0;
+  text-shadow: 1px 1px 4px #000;
+}
+
+/* Fogos de artifício simples */
+.fogo {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  background-color: #ff0;
+  border-radius: 50%;
+  animation: explode 0.8s ease-out forwards;
+}
+
+@keyframes explode {
+  0% {transform: scale(1); opacity:1;}
+  100% {transform: scale(4); opacity:0;}
+}
+
+/* ===================== */
+/* Containers do login/cadastro */
+#loginContainer, #cadastroContainer {
+  max-width: 300px;
+  margin: 0 auto 20px auto;
+  padding: 20px;
+  background-color: #222;
+  border-radius: 8px;
+  box-shadow: 0 0 10px #000;
+}
+
+#loginContainer input, #cadastroContainer input {
+  width: 90%;
 }
