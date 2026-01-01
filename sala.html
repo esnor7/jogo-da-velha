@@ -96,6 +96,10 @@
           alert("Lugar já ocupado!");
         } else {
           ref.set(usuario);
+
+          // 🔥 Remove automaticamente ao sair do site
+          ref.onDisconnect().remove();
+
           jaSentou = true;
         }
       });
