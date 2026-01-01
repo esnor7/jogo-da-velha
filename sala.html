@@ -48,7 +48,10 @@
       appId: "1:1067127105922:web:18a6a4f194711d4973479b"
     };
 
-    firebase.initializeApp(firebaseConfig);
+    if (!firebase.apps.length) {
+      firebase.initializeApp(firebaseConfig);
+    }
+
     const db = firebase.database();
   </script>
 
@@ -57,9 +60,9 @@
     let usuario = "";
 
     const pares = [
-      [1,2,'btn1'],
-      [3,4,'btn2'],
-      [5,6,'btn3']
+      [1, 2, 'btn1'],
+      [3, 4, 'btn2'],
+      [5, 6, 'btn3']
     ];
 
     function entrarSala() {
@@ -68,59 +71,62 @@
         alert("Digite seu nome!");
         return;
       }
+
       usuario = nome;
       document.getElementById('inputNome').style.display = 'none';
       document.getElementById('sala').style.display = 'flex';
     }
 
     function sentar(id) {
-  if (!usuario) {
-    alert("Digite seu nome primeiro!");
-    return;
-  }
+      if (!usuario) {
+        alert("Digite seu nome primeiro!");
+        return;
+      }
 
-  const ref = database.ref("sala/slots/" + id);
+      const ref = db.ref("sala/slots/" + id);
 
-  ref.once("value").then(snapshot => {
-    if (snapshot.exists()) {
-      alert("Lugar já ocupado!");
-    } else {
-      ref.set(usuario);
+      ref.once("value").then(snapshot => {
+        if (snapshot.exists()) {
+          alert("Lugar já ocupado!");
+        } else {
+          ref.set(usuario);
+        }
+      });
     }
-  });
-}
 
-database.ref("sala/slots").on("value", snapshot => {
-  const dados = snapshot.val() || {};
+    // Atualiza sala em tempo real
+    db.ref("sala/slots").on("value", snapshot => {
+      const dados = snapshot.val() || {};
 
-  for (let i = 1; i <= 6; i++) {
-    const slot = document.getElementById("slot" + i);
+      for (let i = 1; i <= 6; i++) {
+        const slot = document.getElementById("slot" + i);
 
-    if (dados[i]) {
-      slot.textContent = dados[i];
-      slot.style.backgroundColor = "#4CAF50";
-    } else {
-      slot.textContent = "Lugar " + i;
-      slot.style.backgroundColor = "#333";
-    }
-  }
+        if (dados[i]) {
+          slot.textContent = dados[i];
+          slot.style.backgroundColor = "#4CAF50";
+        } else {
+          slot.textContent = "Lugar " + i;
+          slot.style.backgroundColor = "#333";
+        }
+      }
 
-  // Mostrar botão Jogar automaticamente
-  pares.forEach(par => {
-    const slotA = dados[par[0]];
-    const slotB = dados[par[1]];
-    const btn = document.getElementById(par[2]);
+      // Mostrar botão Jogar automaticamente
+      pares.forEach(par => {
+        const slotA = dados[par[0]];
+        const slotB = dados[par[1]];
+        const btn = document.getElementById(par[2]);
 
-    btn.style.display = (slotA && slotB) ? "inline-block" : "none";
-  });
-});
+        btn.style.display = (slotA && slotB) ? "inline-block" : "none";
+      });
+    });
 
     function iniciarPartida(parNumero) {
-      let par = pares[parNumero - 1];
+      const par = pares[parNumero - 1];
       const jogador1 = document.getElementById('slot' + par[0]).textContent;
       const jogador2 = document.getElementById('slot' + par[1]).textContent;
 
-      window.location.href = `jogo.html?j1=${encodeURIComponent(jogador1)}&j2=${encodeURIComponent(jogador2)}`;
+      window.location.href =
+        `jogo.html?j1=${encodeURIComponent(jogador1)}&j2=${encodeURIComponent(jogador2)}`;
     }
   </script>
 
