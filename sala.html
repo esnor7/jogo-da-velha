@@ -74,25 +74,46 @@
     }
 
     function sentar(id) {
-      const slot = document.getElementById('slot' + id);
-      if (slot.textContent !== "Lugar " + id) {
-        alert("Lugar já ocupado!");
-        return;
-      }
+  if (!usuario) {
+    alert("Digite seu nome primeiro!");
+    return;
+  }
 
-      slot.textContent = usuario;
-      slot.style.backgroundColor = "#4CAF50";
+  const ref = database.ref("sala/slots/" + id);
 
-      pares.forEach(par => {
-        const slotA = document.getElementById('slot' + par[0]).textContent;
-        const slotB = document.getElementById('slot' + par[1]).textContent;
-        const btn = document.getElementById(par[2]);
-
-        if (slotA !== "Lugar " + par[0] && slotB !== "Lugar " + par[1]) {
-          btn.style.display = 'inline-block';
-        }
-      });
+  ref.once("value").then(snapshot => {
+    if (snapshot.exists()) {
+      alert("Lugar já ocupado!");
+    } else {
+      ref.set(usuario);
     }
+  });
+}
+
+database.ref("sala/slots").on("value", snapshot => {
+  const dados = snapshot.val() || {};
+
+  for (let i = 1; i <= 6; i++) {
+    const slot = document.getElementById("slot" + i);
+
+    if (dados[i]) {
+      slot.textContent = dados[i];
+      slot.style.backgroundColor = "#4CAF50";
+    } else {
+      slot.textContent = "Lugar " + i;
+      slot.style.backgroundColor = "#333";
+    }
+  }
+
+  // Mostrar botão Jogar automaticamente
+  pares.forEach(par => {
+    const slotA = dados[par[0]];
+    const slotB = dados[par[1]];
+    const btn = document.getElementById(par[2]);
+
+    btn.style.display = (slotA && slotB) ? "inline-block" : "none";
+  });
+});
 
     function iniciarPartida(parNumero) {
       let par = pares[parNumero - 1];
@@ -115,4 +136,4 @@
     #inputNome button { padding: 5px 10px; margin: 5px; cursor: pointer; }
   </style>
 </body>
-    </html>
+</html>
