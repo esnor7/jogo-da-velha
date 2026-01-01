@@ -2,246 +2,179 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
-  <title>Jogo da Velha Online</title>
+  <title>Sala de Jogo da Velha</title>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;700&display=swap" rel="stylesheet">
 </head>
 <body>
+  <h1>Sala de Jogo da Velha</h1>
 
-<h2 id="info"></h2>
+  <!-- ENTRAR COM NOME -->
+  <div id="inputNome">
+    <p>Digite seu nome:</p>
+    <input type="text" id="nomeJogador" placeholder="Seu nome">
+    <button id="btnEntrar" onclick="entrarSala()">Entrar</button>
 
-<div class="tabuleiro">
-  <div class="casa" onclick="jogar(0)"></div>
-  <div class="casa" onclick="jogar(1)"></div>
-  <div class="casa" onclick="jogar(2)"></div>
-  <div class="casa" onclick="jogar(3)"></div>
-  <div class="casa" onclick="jogar(4)"></div>
-  <div class="casa" onclick="jogar(5)"></div>
-  <div class="casa" onclick="jogar(6)"></div>
-  <div class="casa" onclick="jogar(7)"></div>
-  <div class="casa" onclick="jogar(8)"></div>
-</div>
+    <!-- Rodapé do desenvolvedor na tela de entrada -->
+    <p id="rodapeEntrada">
+      Site desenvolvido por 
+      <a href="https://www.instagram.com/dpzyn_?igsh=MTJ4dWlsczl2aHdhaw==" target="_blank">Davi</a>
+    </p>
+  </div>
 
-<button onclick="resetar()">Reiniciar</button>
+  <!-- SALA -->
+  <div id="sala" style="display:none;">
+    <p id="statusSala">Aguardando jogadores...</p>
 
-<!-- Confete -->
-<canvas id="confeteCanvas"></canvas>
+    <div class="linha">
+      <div class="slot" id="slot1" onclick="sentar(1)">Lugar 1</div>
+      <div class="slot" id="slot2" onclick="sentar(2)">Lugar 2</div>
+    </div>
 
-<!-- FIREBASE -->
-<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <div class="linha">
+      <div class="slot" id="slot3" onclick="sentar(3)">Lugar 3</div>
+      <div class="slot" id="slot4" onclick="sentar(4)">Lugar 4</div>
+    </div>
 
-<script>
-firebase.initializeApp({
-  apiKey: "AIzaSyAMPqH-lyB4X_whlGIW189rd5KVi2fM-IE",
-  authDomain: "jogo-da-velha-online-36836.firebaseapp.com",
-  databaseURL: "https://jogo-da-velha-online-36836-default-rtdb.firebaseio.com",
-  projectId: "jogo-da-velha-online-36836"
-});
+    <!-- Rodapé do desenvolvedor na sala -->
+    <p id="rodapeSala">
+      Site desenvolvido por 
+      <a href="https://www.instagram.com/dpzyn_?igsh=MTJ4dWlsczl2aHdhaw==" target="_blank">Davi</a>
+    </p>
+  </div>
 
-const db = firebase.database();
-</script>
+  <!-- FIREBASE -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
 
-<script>
-const params = new URLSearchParams(window.location.search);
-const j1 = params.get("j1");
-const j2 = params.get("j2");
-const jogoId = params.get("id");
-
-const usuario = localStorage.getItem("usuario");
-let meuSimbolo = usuario === j1 ? "X" : usuario === j2 ? "O" : alert("Você não está nessa partida!");
-
-const jogoRef = db.ref("jogos/" + jogoId);
-const info = document.getElementById("info");
-const casas = document.querySelectorAll(".casa");
-
-const vitorias = [
-  [0,1,2],[3,4,5],[6,7,8],
-  [0,3,6],[1,4,7],[2,5,8],
-  [0,4,8],[2,4,6]
-];
-
-// cria partida se não existir
-jogoRef.once("value").then(snap => {
-  if (!snap.exists()) {
-    jogoRef.set({
-      tabuleiro: ["","","","","","","","",""],
-      turno: "X",
-      ativo: true,
-      j1,
-      j2
+  <script>
+    firebase.initializeApp({
+      apiKey: "AIzaSyAMPqH-lyB4X_whlGIW189rd5KVi2fM-IE",
+      authDomain: "jogo-da-velha-online-36836.firebaseapp.com",
+      databaseURL: "https://jogo-da-velha-online-36836-default-rtdb.firebaseio.com",
+      projectId: "jogo-da-velha-online-36836"
     });
-  }
-});
 
-function jogar(pos) {
-  jogoRef.once("value").then(snap => {
-    const dados = snap.val();
-    if (!dados || !dados.ativo) return;
-    if (dados.turno !== meuSimbolo) return;
-    if (dados.tabuleiro[pos] !== "") return;
+    const db = firebase.database();
+    let usuario = localStorage.getItem("usuario"); // pega nome salvo
+    let meuSlot = null;
+    const pares = { 1:2, 2:1, 3:4, 4:3 };
 
-    dados.tabuleiro[pos] = meuSimbolo;
-    dados.turno = meuSimbolo === "X" ? "O" : "X";
-    jogoRef.set(dados);
-  });
-}
+    if (usuario) entrarSala();
 
-// atualiza tabuleiro
-jogoRef.on("value", snap => {
-  const dados = snap.val();
-  if (!dados) return;
+    function entrarSala() {
+      if (!usuario) {
+        const nome = document.getElementById("nomeJogador").value.trim();
+        if (!nome) return alert("Digite seu nome!");
+        usuario = nome;
+        localStorage.setItem("usuario", usuario);
+      }
 
-  casas.forEach((casa, i) => {
-    casa.textContent = dados.tabuleiro[i];
-    casa.classList.remove("X","O");
-    if (dados.tabuleiro[i]) casa.classList.add(dados.tabuleiro[i]);
-  });
-
-  info.textContent = dados.ativo
-      ? `Vez de ${dados.turno === "X" ? dados.j1 : dados.j2}`
-      : "";
-
-  verificarFim(dados);
-});
-
-// verifica vencedor ou empate
-function verificarFim(dados) {
-  for (let [a,b,c] of vitorias) {
-    if (
-      dados.tabuleiro[a] &&
-      dados.tabuleiro[a] === dados.tabuleiro[b] &&
-      dados.tabuleiro[a] === dados.tabuleiro[c]
-    ) {
-      info.textContent = `🏆 Vencedor: ${dados.tabuleiro[a] === "X" ? dados.j1 : dados.j2}`;
-      jogoRef.update({ ativo: false });
-      confete();
-      return;
+      document.getElementById("inputNome").style.display = "none";
+      document.getElementById("sala").style.display = "block";
     }
-  }
 
-  if (!dados.tabuleiro.includes("")) {
-    info.textContent = "🤝 Empate!";
-    jogoRef.update({ ativo: false });
-  }
-}
+    function sentar(id) {
+      if (!usuario) return alert("Digite seu nome primeiro!");
+      if (meuSlot) return alert("Você já está sentado!");
 
-function resetar() {
-  jogoRef.set({
-    tabuleiro: ["","","","","","","","",""],
-    turno: "X",
-    ativo: true,
-    j1,
-    j2
-  });
-}
+      const ref = db.ref("sala/slots/" + id);
+      ref.once("value").then(snap => {
+        if (snap.exists()) {
+          alert("Lugar ocupado!");
+        } else {
+          ref.set(usuario);
+          meuSlot = id;
+          window.addEventListener("beforeunload", () => ref.remove());
+        }
+      });
+    }
 
-// Confete 🎊
-function confete() {
-  const canvas = document.getElementById("confeteCanvas");
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
-  const ctx = canvas.getContext("2d");
-  const particulas = [];
+    db.ref("sala/slots").on("value", snap => {
+      const dados = snap.val() || {};
+      for (let i = 1; i <= 4; i++) {
+        const el = document.getElementById("slot" + i);
+        if (dados[i]) {
+          el.textContent = dados[i];
+          el.classList.add("ocupado");
+        } else {
+          el.textContent = "Lugar " + i;
+          el.classList.remove("ocupado");
+        }
+      }
 
-  for(let i=0;i<150;i++){
-    particulas.push({
-      x: Math.random()*canvas.width,
-      y: Math.random()*canvas.height - canvas.height,
-      r: Math.random()*6+4,
-      d: Math.random()*20,
-      color: `hsl(${Math.random()*360},100%,50%)`,
-      tilt: Math.random()*10-10
+      const status = document.getElementById("statusSala");
+      if (meuSlot && dados[meuSlot] && dados[pares[meuSlot]]) {
+        const j1 = dados[meuSlot];
+        const j2 = dados[pares[meuSlot]];
+        const jogoId = `${j1}_vs_${j2}`.replace(/\s/g, "_");
+        window.location.href = `jogo.html?j1=${encodeURIComponent(j1)}&j2=${encodeURIComponent(j2)}&id=${jogoId}`;
+      } else {
+        status.textContent = "Aguardando outro jogador...";
+      }
     });
-  }
+  </script>
 
-  let angle = 0;
+  <style>
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: linear-gradient(-45deg,#111,#222,#333,#444);
+      background-size: 400% 400%;
+      animation: grad 15s ease infinite;
+      color: #fff;
+      text-align: center;
+      min-height: 100vh;
+      position: relative;
+    }
 
-  function desenhar(){
-    ctx.clearRect(0,0,canvas.width,canvas.height);
-    particulas.forEach(p=>{
-      ctx.beginPath();
-      ctx.fillStyle = p.color;
-      ctx.moveTo(p.x + p.tilt, p.y);
-      ctx.arc(p.x, p.y, p.r, 0, Math.PI*2, true);
-      ctx.fill();
+    @keyframes grad {
+      0%{background-position:0% 50%}
+      50%{background-position:100% 50%}
+      100%{background-position:0% 50%}
+    }
 
-      p.tilt += 0.1;
-      p.y += Math.cos(angle+p.d)+1+p.r/2;
-      if(p.y>canvas.height){ p.y=0; p.x=Math.random()*canvas.width; }
-    });
-    angle += 0.1;
-    requestAnimationFrame(desenhar);
-  }
+    h1 { margin-bottom: 20px; }
 
-  desenhar();
-}
-</script>
+    #inputNome input {
+      padding: 10px; font-size: 16px; border-radius: 8px; border:none;
+    }
+    #btnEntrar {
+      padding: 10px 20px; font-size:16px; border:none; border-radius:8px;
+      cursor:pointer; background:#ff9800; color:#fff;
+      font-weight:bold; transition: all 0.3s;
+    }
+    #btnEntrar:hover { background:#e68a00; transform: scale(1.05); }
 
-<style>
-body {
-  font-family: 'Poppins', sans-serif;
-  background: linear-gradient(-45deg,#111,#222,#333,#444);
-  background-size: 400% 400%;
-  animation: grad 15s ease infinite;
-  color: #fff;
-  text-align: center;
-}
+    .linha { display:flex; justify-content:center; margin-top:20px; }
+    .slot {
+      width:140px; height:100px; margin:10px;
+      background:#333; display:flex;
+      justify-content:center; align-items:center;
+      cursor:pointer; border-radius:12px;
+      font-weight:bold; font-size:18px;
+      transition: all 0.3s;
+      box-shadow: 0 0 5px #000;
+    }
+    .slot:hover { transform: scale(1.05); box-shadow: 0 0 20px #fff; }
+    .ocupado { background:#4CAF50; box-shadow:0 0 20px #4CAF50; }
+    #statusSala { margin-top:20px; font-size:18px; font-weight:bold; }
 
-@keyframes grad {
-  0%{background-position:0% 50%}
-  50%{background-position:100% 50%}
-  100%{background-position:0% 50%}
-}
-
-h2 { margin-bottom: 20px; font-size: 24px; }
-
-.tabuleiro {
-  display: grid;
-  grid-template-columns: repeat(3, 120px);
-  gap: 15px;
-  justify-content: center;
-  margin: 20px auto;
-}
-
-.casa {
-  width: 120px;
-  height: 120px;
-  background:#333;
-  font-size: 60px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  cursor: pointer;
-  border-radius: 16px;
-  box-shadow: 0 0 10px #000;
-  transition: all 0.3s;
-}
-.casa:hover { transform: scale(1.05); box-shadow: 0 0 20px #ff9800; }
-
-.casa.X { color:#ff3b3b; text-shadow: 0 0 15px #ff3b3b; }
-.casa.O { color:#39ff14; text-shadow: 0 0 15px #39ff14; }
-
-button {
-  padding: 12px 24px;
-  font-size: 18px;
-  border-radius: 12px;
-  border: none;
-  cursor: pointer;
-  background: #ff9800;
-  color: #fff;
-  margin-top: 20px;
-  font-weight: bold;
-  transition: all 0.3s;
-}
-button:hover { background: #e68a00; transform: scale(1.05); }
-
-#confeteCanvas {
-  position: fixed;
-  top:0; left:0;
-  pointer-events:none;
-  z-index:9999;
-}
-</style>
-
+    /* Rodapé */
+    #rodapeEntrada, #rodapeSala {
+      position: fixed;
+      bottom: 5px;
+      width: 100%;
+      text-align: center;
+      font-size: 14px;
+      color: #ccc;
+    }
+    #rodapeEntrada a, #rodapeSala a {
+      color: #ff9800;
+      text-decoration: none;
+      font-weight: bold;
+    }
+    #rodapeEntrada a:hover, #rodapeSala a:hover {
+      text-decoration: underline;
+    }
+  </style>
 </body>
-</html>
+  </html>
