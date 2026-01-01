@@ -2,90 +2,36 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
-  <title>Login / Cadastro</title>
+  <title>Bem-vindo!</title>
   <link rel="stylesheet" href="style.css">
-  <!-- Desativa autocomplete para evitar interferência do navegador -->
   <meta name="autocomplete" content="off">
 </head>
 <body>
-  <h1>Bem-vindo!</h1>
+  <h1>Bem-vindo ao Jogo da Velha!</h1>
 
-  <!-- ===== LOGIN ===== -->
-  <div id="loginContainer">
-    <h2>Login</h2>
-    <input type="text" id="usuarioLogin" placeholder="Usuário" autocomplete="off">
-    <input type="password" id="senhaLogin" placeholder="Senha" autocomplete="new-password">
-    <button onclick="logar()">Entrar</button>
-    <p>Não tem conta ainda? <span onclick="mostrarCadastro()">Cadastre-se</span></p>
-  </div>
-
-  <!-- ===== CADASTRO ===== -->
-  <div id="cadastroContainer" style="display:none;">
-    <h2>Cadastro</h2>
-    <input type="text" id="novoUsuario" placeholder="Usuário" autocomplete="off">
-    <input type="password" id="novaSenha" placeholder="Senha" autocomplete="new-password">
-    <button onclick="cadastrar()">Cadastrar</button>
-    <p>Já tem conta? <span onclick="mostrarLogin()">Faça login</span></p>
+  <div id="entradaContainer">
+    <p>Digite um nome para jogar:</p>
+    <input type="text" id="nomeJogador" placeholder="Ex: Anônimo123" autocomplete="off">
+    <button onclick="entrar()">Entrar na Sala</button>
   </div>
 
   <script>
-    // Alternar entre login e cadastro
-    function mostrarCadastro() {
-      document.getElementById('loginContainer').style.display = 'none';
-      document.getElementById('cadastroContainer').style.display = 'block';
-    }
-
-    function mostrarLogin() {
-      document.getElementById('cadastroContainer').style.display = 'none';
-      document.getElementById('loginContainer').style.display = 'block';
-    }
-
-    // ===== CADASTRO =====
-    function cadastrar() {
-      const usuario = document.getElementById('novoUsuario').value.trim();
-      const senha = document.getElementById('novaSenha').value.trim();
-
-      if(!usuario || !senha) {
-        alert('Preencha usuário e senha para cadastrar.');
+    function entrar() {
+      const nome = document.getElementById('nomeJogador').value.trim();
+      if(!nome) {
+        alert("Digite um nome para jogar!");
         return;
       }
-
-      let usuarios = JSON.parse(localStorage.getItem('usuarios') || '{}');
-
-      if(usuarios[usuario]) {
-        alert('Usuário já existe!');
-        return;
-      }
-
-      usuarios[usuario] = senha;
-      localStorage.setItem('usuarios', JSON.stringify(usuarios));
-      alert('Cadastro realizado com sucesso! Faça login.');
-
-      // Limpa campos e volta para login
-      document.getElementById('novoUsuario').value = '';
-      document.getElementById('novaSenha').value = '';
-      mostrarLogin();
-    }
-
-    // ===== LOGIN =====
-    function logar() {
-      const usuario = document.getElementById('usuarioLogin').value.trim();
-      const senha = document.getElementById('senhaLogin').value.trim();
-
-      if(!usuario || !senha) {
-        alert('Preencha usuário e senha.');
-        return;
-      }
-
-      let usuarios = JSON.parse(localStorage.getItem('usuarios') || '{}');
-
-      if(usuarios[usuario] && usuarios[usuario] === senha) {
-        alert('Login bem-sucedido! Redirecionando para a sala...');
-        window.location.href = "sala.html";
-      } else {
-        alert('Usuário ou senha incorretos!');
-      }
+      // Redireciona para sala passando o nome na URL
+      window.location.href = `sala.html?nome=${encodeURIComponent(nome)}`;
     }
   </script>
+
+  <style>
+    body { font-family: Arial; background-color: #111; color: #fff; text-align: center; padding: 50px; }
+    input { padding: 8px; margin: 5px; border-radius: 5px; border: none; outline: none; font-size: 1em; }
+    button { padding: 8px 15px; margin: 5px; cursor: pointer; border-radius: 5px; border: none; font-weight: bold; background-color: #ff9800; color: #fff; transition: background-color 0.2s; }
+    button:hover { background-color: #e68a00; }
+  </style>
 </body>
 </html>
