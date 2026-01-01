@@ -8,8 +8,15 @@
 <body>
   <h1>Sala de Jogo da Velha</h1>
 
-  <!-- Sala com 6 lugares -->
-  <div id="sala" class="sala">
+  <!-- ===== ENTRAR COM NOME ===== -->
+  <div id="inputNome">
+    <p>Digite seu nome:</p>
+    <input type="text" id="nomeJogador" placeholder="Seu nome">
+    <button onclick="entrarSala()">Entrar na Sala</button>
+  </div>
+
+  <!-- ===== SALA ===== -->
+  <div id="sala" class="sala" style="display:none;">
     <!-- Par 1 -->
     <div class="slot" id="slot1" onclick="sentar(1)">Lugar 1</div>
     <div class="slot" id="slot2" onclick="sentar(2)">Lugar 2</div>
@@ -26,44 +33,72 @@
     <button id="btn3" class="botaoJogar" onclick="iniciarPartida(3)" style="display:none">Jogar!</button>
   </div>
 
-  <script>
-    // Pega o nome do jogador da URL
-    const urlParams = new URLSearchParams(window.location.search);
-    const usuario = urlParams.get('nome') || "Anônimo";
+  <!-- ===== FIREBASE ===== -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
 
-    // Array com pares de slots
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyAMPqH-lyB4X_whlGIW189rd5KVi2fM-IE",
+      authDomain: "jogo-da-velha-online-36836.firebaseapp.com",
+      databaseURL: "https://jogo-da-velha-online-36836-default-rtdb.firebaseio.com",
+      projectId: "jogo-da-velha-online-36836",
+      storageBucket: "jogo-da-velha-online-36836.appspot.com",
+      messagingSenderId: "1067127105922",
+      appId: "1:1067127105922:web:18a6a4f194711d4973479b"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+  </script>
+
+  <!-- ===== SCRIPT DA SALA ===== -->
+  <script>
+    let usuario = "";
+
     const pares = [
       [1,2,'btn1'],
       [3,4,'btn2'],
       [5,6,'btn3']
     ];
 
-    // Função para sentar em um slot
+    function entrarSala() {
+      const nome = document.getElementById('nomeJogador').value.trim();
+      if (!nome) {
+        alert("Digite seu nome!");
+        return;
+      }
+      usuario = nome;
+      document.getElementById('inputNome').style.display = 'none';
+      document.getElementById('sala').style.display = 'flex';
+    }
+
     function sentar(id) {
       const slot = document.getElementById('slot' + id);
-      if(slot.textContent !== "Lugar " + id) {
+      if (slot.textContent !== "Lugar " + id) {
         alert("Lugar já ocupado!");
         return;
       }
+
       slot.textContent = usuario;
       slot.style.backgroundColor = "#4CAF50";
 
-      // Verifica os pares e mostra botão se ambos ocupados
       pares.forEach(par => {
         const slotA = document.getElementById('slot' + par[0]).textContent;
         const slotB = document.getElementById('slot' + par[1]).textContent;
         const btn = document.getElementById(par[2]);
-        if(slotA !== "Lugar " + par[0] && slotB !== "Lugar " + par[1]) {
+
+        if (slotA !== "Lugar " + par[0] && slotB !== "Lugar " + par[1]) {
           btn.style.display = 'inline-block';
         }
       });
     }
 
-    // Função para iniciar partida de um par
     function iniciarPartida(parNumero) {
-      let par = pares[parNumero-1];
+      let par = pares[parNumero - 1];
       const jogador1 = document.getElementById('slot' + par[0]).textContent;
       const jogador2 = document.getElementById('slot' + par[1]).textContent;
+
       window.location.href = `jogo.html?j1=${encodeURIComponent(jogador1)}&j2=${encodeURIComponent(jogador2)}`;
     }
   </script>
@@ -75,6 +110,9 @@
     .slot:hover { background-color: #555; }
     .botaoJogar { width: 120px; height: 40px; margin: 10px; border-radius: 8px; background-color: #ff9800; color: #fff; font-weight: bold; cursor: pointer; border: none; }
     .botaoJogar:hover { background-color: #e68a00; }
+    #inputNome { margin-bottom: 20px; }
+    #inputNome input { padding: 5px; margin: 5px; }
+    #inputNome button { padding: 5px 10px; margin: 5px; cursor: pointer; }
   </style>
 </body>
-</html>
+    </html>
