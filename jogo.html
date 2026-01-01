@@ -45,9 +45,12 @@ const j1 = params.get("j1");
 const j2 = params.get("j2");
 const jogoId = params.get("id");
 
-// pede para o jogador se identificar
-const meuNome = prompt("Confirme seu nome:");
-const meuSimbolo = meuNome === j1 ? "X" : "O";
+// identifica o jogador automaticamente
+const usuario = localStorage.getItem("usuario");
+let meuSimbolo = "";
+if (usuario === j1) meuSimbolo = "X";
+else if (usuario === j2) meuSimbolo = "O";
+else alert("Você não está nessa partida!");
 
 const jogoRef = db.ref("jogos/" + jogoId);
 
@@ -90,6 +93,7 @@ function jogar(pos) {
   });
 }
 
+// atualiza tabuleiro em tempo real
 jogoRef.on("value", snap => {
   const dados = snap.val();
   if (!dados) return;
@@ -98,8 +102,7 @@ jogoRef.on("value", snap => {
     casa.textContent = dados.tabuleiro[i];
   });
 
-  info.textContent =
-    dados.ativo
+  info.textContent = dados.ativo
       ? `Vez de ${dados.turno === "X" ? dados.j1 : dados.j2}`
       : "";
 
@@ -113,8 +116,7 @@ function verificarFim(dados) {
       dados.tabuleiro[a] === dados.tabuleiro[b] &&
       dados.tabuleiro[a] === dados.tabuleiro[c]
     ) {
-      info.textContent =
-        `🏆 Vencedor: ${dados.tabuleiro[a] === "X" ? dados.j1 : dados.j2}`;
+      info.textContent = `🏆 Vencedor: ${dados.tabuleiro[a] === "X" ? dados.j1 : dados.j2}`;
       jogoRef.update({ ativo: false });
       return;
     }
