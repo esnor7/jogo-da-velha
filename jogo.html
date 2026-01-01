@@ -2,131 +2,173 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
-  <title>Jogo da Velha</title>
-  <link rel="stylesheet" href="style.css">
+  <title>Jogo da Velha Online</title>
 </head>
 <body>
-  <h1>Jogo da Velha</h1>
-  <div id="info"></div>
-  <div class="tabuleiro">
-    <div class="celula" id="c0" onclick="marcar(0)"></div>
-    <div class="celula" id="c1" onclick="marcar(1)"></div>
-    <div class="celula" id="c2" onclick="marcar(2)"></div>
-    <div class="celula" id="c3" onclick="marcar(3)"></div>
-    <div class="celula" id="c4" onclick="marcar(4)"></div>
-    <div class="celula" id="c5" onclick="marcar(5)"></div>
-    <div class="celula" id="c6" onclick="marcar(6)"></div>
-    <div class="celula" id="c7" onclick="marcar(7)"></div>
-    <div class="celula" id="c8" onclick="marcar(8)"></div>
-  </div>
-  <div id="mensagemVitoria" style="display:none;"></div>
-  <button onclick="reiniciar()">Reiniciar</button>
 
-  <script>
-    // ---------- Pegar jogadores da URL ----------
-    const urlParams = new URLSearchParams(window.location.search);
-    const jogador1 = urlParams.get('j1');
-    const jogador2 = urlParams.get('j2');
+<h2 id="info"></h2>
 
-    if(!jogador1 || !jogador2){
-      alert("Nenhum jogador definido! Redirecionando para cadastro/login.");
-      window.location.href = "index.html";
+<div class="tabuleiro">
+  <div class="casa" onclick="jogar(0)"></div>
+  <div class="casa" onclick="jogar(1)"></div>
+  <div class="casa" onclick="jogar(2)"></div>
+
+  <div class="casa" onclick="jogar(3)"></div>
+  <div class="casa" onclick="jogar(4)"></div>
+  <div class="casa" onclick="jogar(5)"></div>
+
+  <div class="casa" onclick="jogar(6)"></div>
+  <div class="casa" onclick="jogar(7)"></div>
+  <div class="casa" onclick="jogar(8)"></div>
+</div>
+
+<button onclick="resetar()">Reiniciar</button>
+
+<!-- FIREBASE -->
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyAMPqH-lyB4X_whlGIW189rd5KVi2fM-IE",
+    authDomain: "jogo-da-velha-online-36836.firebaseapp.com",
+    databaseURL: "https://jogo-da-velha-online-36836-default-rtdb.firebaseio.com",
+    projectId: "jogo-da-velha-online-36836",
+    storageBucket: "jogo-da-velha-online-36836.appspot.com",
+    messagingSenderId: "1067127105922",
+    appId: "1:1067127105922:web:18a6a4f194711d4973479b"
+  };
+
+  if (!firebase.apps.length) {
+    firebase.initializeApp(firebaseConfig);
+  }
+
+  const db = firebase.database();
+</script>
+
+<script>
+  const params = new URLSearchParams(window.location.search);
+  const j1 = params.get("j1");
+  const j2 = params.get("j2");
+
+  const jogoRef = db.ref("jogoAtual");
+
+  const info = document.getElementById("info");
+  const casas = document.querySelectorAll(".casa");
+
+  const vitorias = [
+    [0,1,2],[3,4,5],[6,7,8],
+    [0,3,6],[1,4,7],[2,5,8],
+    [0,4,8],[2,4,6]
+  ];
+
+  jogoRef.once("value").then(snap => {
+    if (!snap.exists()) {
+      jogoRef.set({
+        tabuleiro: ["","","","","","","","",""],
+        turno: "X",
+        ativo: true
+      });
     }
+  });
 
-    let tabuleiro = ["","","","","","","","",""];
-    let vezX = true;
-    const info = document.getElementById('info');
-    const mensagem = document.getElementById('mensagemVitoria');
+  function jogar(pos) {
+    jogoRef.once("value").then(snap => {
+      const dados = snap.val();
+      if (!dados.ativo) return;
+      if (dados.tabuleiro[pos] !== "") return;
 
-    info.innerHTML = `É a vez de: ${jogador1} (X)`;
+      dados.tabuleiro[pos] = dados.turno;
+      dados.turno = dados.turno === "X" ? "O" : "X";
 
-    function marcar(pos) {
-      if(tabuleiro[pos] !== "" || mensagem.style.display === "block") return;
+      jogoRef.set(dados);
+    });
+  }
 
-      tabuleiro[pos] = vezX ? "X" : "O";
-      document.getElementById('c'+pos).textContent = tabuleiro[pos];
+  jogoRef.on("value", snap => {
+    const dados = snap.val();
+    if (!dados) return;
 
-      if(verificarVitoria()) return;
+    casas.forEach((casa, i) => {
+      casa.textContent = dados.tabuleiro[i];
+    });
 
-      vezX = !vezX;
-      info.innerHTML = `É a vez de: ${vezX ? jogador1 + " (X)" : jogador2 + " (O)"}`;
-    }
+    info.textContent = `Vez de: ${dados.turno === "X" ? j1 : j2}`;
 
-    function verificarVitoria() {
-      const combos = [
-        [0,1,2],[3,4,5],[6,7,8],
-        [0,3,6],[1,4,7],[2,5,8],
-        [0,4,8],[2,4,6]
-      ];
+    verificarFim(dados);
+  });
 
-      for(let combo of combos){
-        const [a,b,c] = combo;
-        if(tabuleiro[a] && tabuleiro[a] === tabuleiro[b] && tabuleiro[a] === tabuleiro[c]){
-          const vencedor = tabuleiro[a] === "X" ? jogador1 : jogador2;
-          mostrarVitoria(vencedor);
-          return true;
-        }
+  function verificarFim(dados) {
+    for (let combo of vitorias) {
+      const [a,b,c] = combo;
+      if (
+        dados.tabuleiro[a] &&
+        dados.tabuleiro[a] === dados.tabuleiro[b] &&
+        dados.tabuleiro[a] === dados.tabuleiro[c]
+      ) {
+        info.textContent = `🏆 Vencedor: ${dados.tabuleiro[a] === "X" ? j1 : j2}`;
+        jogoRef.update({ ativo: false });
+        return;
       }
-
-      if(!tabuleiro.includes("")){
-        mostrarVitoria("Empate");
-        return true;
-      }
-
-      return false;
     }
 
-    function mostrarVitoria(vencedor){
-      mensagem.style.display = "block";
-      mensagem.innerHTML = vencedor === "Empate" ? "Empate!" : `🏆 Vitória de ${vencedor}! 🏆`;
-      info.innerHTML = "";
-      startFogos();
+    if (!dados.tabuleiro.includes("")) {
+      info.textContent = "🤝 Empate!";
+      jogoRef.update({ ativo: false });
     }
+  }
 
-    function reiniciar() {
-      tabuleiro = ["","","","","","","","",""];
-      vezX = true;
-      for(let i=0;i<9;i++){
-        document.getElementById('c'+i).textContent = "";
-      }
-      mensagem.style.display = "none";
-      info.innerHTML = `É a vez de: ${jogador1} (X)`;
-      pararFogos();
-    }
+  function resetar() {
+    jogoRef.set({
+      tabuleiro: ["","","","","","","","",""],
+      turno: "X",
+      ativo: true
+    });
+  }
+</script>
 
-    // ---------- EFEITO DE FOGOS SIMPLES ----------
-    let fogosInterval;
-    function startFogos() {
-      fogosInterval = setInterval(() => {
-        const f = document.createElement("div");
-        f.className = "fogo";
-        f.style.left = Math.random()*90 + "vw";
-        f.style.top = Math.random()*80 + "vh";
-        document.body.appendChild(f);
-        setTimeout(()=>f.remove(),1000);
-      }, 200);
-    }
+<style>
+  body {
+    background: #111;
+    color: #fff;
+    text-align: center;
+    font-family: Arial;
+  }
 
-    function pararFogos() {
-      clearInterval(fogosInterval);
-      document.querySelectorAll(".fogo").forEach(f => f.remove());
-    }
-  </script>
+  .tabuleiro {
+    display: grid;
+    grid-template-columns: repeat(3, 100px);
+    gap: 10px;
+    justify-content: center;
+    margin: 20px auto;
+  }
 
-  <style>
-    body { font-family: Arial; background-color: #111; color: #fff; text-align: center; overflow-x:hidden; }
-    .tabuleiro { display: grid; grid-template-columns: repeat(3,100px); grid-gap:5px; justify-content:center; margin:20px auto; }
-    .celula { width:100px; height:100px; background-color:#333; display:flex; justify-content:center; align-items:center; font-size:2em; cursor:pointer; border-radius:8px; }
-    .celula:hover { background-color:#555; }
-    #mensagemVitoria { font-size:2em; margin:20px; color:#ff0; text-shadow: 1px 1px 4px #000; }
-    button { padding:10px 20px; margin-top:20px; cursor:pointer; font-weight:bold; border-radius:8px; background-color:#ff9800; color:#fff; border:none; }
-    button:hover { background-color:#e68a00; }
-    /* fogos */
-    .fogo { position:absolute; width:10px; height:10px; background-color: #ff0; border-radius:50%; animation: explode 0.8s ease-out forwards; }
-    @keyframes explode {
-      0% {transform: scale(1); opacity:1;}
-      100% {transform: scale(4); opacity:0;}
-    }
-  </style>
+  .casa {
+    width: 100px;
+    height: 100px;
+    background: #333;
+    font-size: 50px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    border-radius: 8px;
+  }
+
+  .casa:hover {
+    background: #555;
+  }
+
+  button {
+    padding: 10px 20px;
+    font-size: 16px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    background: #ff9800;
+    color: #fff;
+  }
+</style>
+
 </body>
 </html>
