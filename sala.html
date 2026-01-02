@@ -8,21 +8,7 @@
 <body>
   <h1>Sala de Jogo da Velha</h1>
 
-  <!-- ENTRAR COM NOME -->
-  <div id="inputNome">
-    <p>Digite seu nome:</p>
-    <input type="text" id="nomeJogador" placeholder="Ex: Anônimo123">
-    <button id="btnEntrar" onclick="entrarSala()">Entrar</button>
-
-    <!-- Rodapé do desenvolvedor na tela de entrada -->
-    <p id="rodapeEntrada">
-      Site desenvolvido por 
-      <a href="https://www.instagram.com/dpzyn_?igsh=MTJ4dWlsczl2aHdhaw==" target="_blank">Davi</a>
-    </p>
-  </div>
-
-  <!-- SALA -->
-  <div id="sala" style="display:none;">
+  <div id="salaContainer">
     <p id="statusSala">Aguardando jogadores...</p>
 
     <div class="linha">
@@ -35,7 +21,6 @@
       <div class="slot" id="slot4" onclick="sentar(4)">Lugar 4</div>
     </div>
 
-    <!-- Rodapé do desenvolvedor na sala -->
     <p id="rodapeSala">
       Site desenvolvido por 
       <a href="https://www.instagram.com/dpzyn_?igsh=MTJ4dWlsczl2aHdhaw==" target="_blank">Davi</a>
@@ -47,6 +32,14 @@
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
 
   <script>
+    // Pega o nome passado na URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const usuario = urlParams.get('nome');
+    if(!usuario) {
+      alert("Nome não informado! Voltando à página inicial.");
+      window.location.href = 'index.html';
+    }
+
     firebase.initializeApp({
       apiKey: "AIzaSyAMPqH-lyB4X_whlGIW189rd5KVi2fM-IE",
       authDomain: "jogo-da-velha-online-36836.firebaseapp.com",
@@ -55,30 +48,14 @@
     });
 
     const db = firebase.database();
-    let usuario = localStorage.getItem("usuario") || "";
     let meuSlot = null;
     const pares = { 1:2, 2:1, 3:4, 4:3 };
 
-    if (usuario) entrarSala();
-
-    function entrarSala() {
-      if (!usuario) {
-        const nome = document.getElementById("nomeJogador").value.trim();
-        if (!nome) return alert("Digite seu nome!");
-        usuario = nome;
-        localStorage.setItem("usuario", usuario);
-      }
-      document.getElementById("inputNome").style.display = "none";
-      document.getElementById("sala").style.display = "block";
-    }
-
     function sentar(id) {
-      if (!usuario) return alert("Digite seu nome primeiro!");
-      if (meuSlot) return alert("Você já está sentado!");
-
+      if(meuSlot) return alert("Você já está sentado!");
       const ref = db.ref("sala/slots/" + id);
       ref.once("value").then(snap => {
-        if (snap.exists() && snap.val() !== null) {
+        if(snap.exists() && snap.val() !== null) {
           alert("Lugar ocupado!");
         } else {
           ref.set(usuario);
@@ -90,9 +67,9 @@
 
     db.ref("sala/slots").on("value", snap => {
       const dados = snap.val() || {};
-      for (let i = 1; i <= 4; i++) {
-        const el = document.getElementById("slot" + i);
-        if (dados[i]) {
+      for(let i=1; i<=4; i++) {
+        const el = document.getElementById("slot"+i);
+        if(dados[i]) {
           el.textContent = dados[i];
           el.classList.add("ocupado");
         } else {
@@ -102,7 +79,7 @@
       }
 
       const status = document.getElementById("statusSala");
-      if (meuSlot && dados[meuSlot] && dados[pares[meuSlot]]) {
+      if(meuSlot && dados[meuSlot] && dados[pares[meuSlot]]) {
         const j1 = dados[meuSlot];
         const j2 = dados[pares[meuSlot]];
         const jogoId = `${j1}_vs_${j2}`.replace(/\s/g, "_");
@@ -114,66 +91,17 @@
   </script>
 
   <style>
-    body {
-      font-family: 'Poppins', sans-serif;
-      background: linear-gradient(-45deg,#111,#222,#333,#444);
-      background-size: 400% 400%;
-      animation: grad 15s ease infinite;
-      color: #fff;
-      text-align: center;
-      min-height: 100vh;
-      position: relative;
-    }
-
-    @keyframes grad {
-      0%{background-position:0% 50%}
-      50%{background-position:100% 50%}
-      100%{background-position:0% 50%}
-    }
-
-    h1 { margin-bottom: 20px; }
-
-    #inputNome input {
-      padding: 10px; font-size: 16px; border-radius: 8px; border:none;
-    }
-    #btnEntrar {
-      padding: 10px 20px; font-size:16px; border:none; border-radius:8px;
-      cursor:pointer; background:#ff9800; color:#fff;
-      font-weight:bold; transition: all 0.3s;
-    }
-    #btnEntrar:hover { background:#e68a00; transform: scale(1.05); }
-
+    body { font-family: 'Poppins', sans-serif; background: linear-gradient(-45deg,#111,#222,#333,#444); background-size:400% 400%; animation:grad 15s ease infinite; color:#fff; text-align:center; min-height:100vh; position:relative; }
+    @keyframes grad {0%{background-position:0% 50%} 50%{background-position:100% 50%} 100%{background-position:0% 50%}}
+    h1 { margin-bottom:20px; }
     .linha { display:flex; justify-content:center; margin-top:20px; }
-    .slot {
-      width:140px; height:100px; margin:10px;
-      background:#333; display:flex;
-      justify-content:center; align-items:center;
-      cursor:pointer; border-radius:12px;
-      font-weight:bold; font-size:18px;
-      transition: all 0.3s;
-      box-shadow: 0 0 5px #000;
-    }
-    .slot:hover { transform: scale(1.05); box-shadow: 0 0 20px #fff; }
+    .slot { width:140px; height:100px; margin:10px; background:#333; display:flex; justify-content:center; align-items:center; cursor:pointer; border-radius:12px; font-weight:bold; font-size:18px; transition: all 0.3s; box-shadow:0 0 5px #000; }
+    .slot:hover { transform: scale(1.05); box-shadow:0 0 20px #fff; }
     .ocupado { background:#4CAF50; box-shadow:0 0 20px #4CAF50; }
     #statusSala { margin-top:20px; font-size:18px; font-weight:bold; }
-
-    /* Rodapé */
-    #rodapeEntrada, #rodapeSala {
-      position: fixed;
-      bottom: 5px;
-      width: 100%;
-      text-align: center;
-      font-size: 14px;
-      color: #ccc;
-    }
-    #rodapeEntrada a, #rodapeSala a {
-      color: #ff9800;
-      text-decoration: none;
-      font-weight: bold;
-    }
-    #rodapeEntrada a:hover, #rodapeSala a:hover {
-      text-decoration: underline;
-    }
+    #rodapeSala { position: fixed; bottom: 5px; width: 100%; text-align: center; font-size:14px; color:#ccc; }
+    #rodapeSala a { color:#ff9800; text-decoration:none; font-weight:bold; }
+    #rodapeSala a:hover { text-decoration:underline; }
   </style>
 </body>
-  </html>
+</html>
