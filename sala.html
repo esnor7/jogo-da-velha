@@ -11,8 +11,14 @@
   <!-- ENTRAR COM NOME -->
   <div id="inputNome">
     <p>Digite seu nome:</p>
-    <input type="text" id="nomeJogador" placeholder="Seu nome">
+    <input type="text" id="nomeJogador" placeholder="Ex: Anônimo123">
     <button id="btnEntrar" onclick="entrarSala()">Entrar</button>
+
+    <!-- Rodapé do desenvolvedor na tela de entrada -->
+    <p id="rodapeEntrada">
+      Site desenvolvido por 
+      <a href="https://www.instagram.com/dpzyn_?igsh=MTJ4dWlsczl2aHdhaw==" target="_blank">Davi</a>
+    </p>
   </div>
 
   <!-- SALA -->
@@ -28,6 +34,12 @@
       <div class="slot" id="slot3" onclick="sentar(3)">Lugar 3</div>
       <div class="slot" id="slot4" onclick="sentar(4)">Lugar 4</div>
     </div>
+
+    <!-- Rodapé do desenvolvedor na sala -->
+    <p id="rodapeSala">
+      Site desenvolvido por 
+      <a href="https://www.instagram.com/dpzyn_?igsh=MTJ4dWlsczl2aHdhaw==" target="_blank">Davi</a>
+    </p>
   </div>
 
   <!-- FIREBASE -->
@@ -43,11 +55,10 @@
     });
 
     const db = firebase.database();
-    let usuario = localStorage.getItem("usuario"); // pega nome salvo
+    let usuario = localStorage.getItem("usuario") || "";
     let meuSlot = null;
     const pares = { 1:2, 2:1, 3:4, 4:3 };
 
-    // se já tiver nome, vai direto para a sala
     if (usuario) entrarSala();
 
     function entrarSala() {
@@ -57,7 +68,6 @@
         usuario = nome;
         localStorage.setItem("usuario", usuario);
       }
-
       document.getElementById("inputNome").style.display = "none";
       document.getElementById("sala").style.display = "block";
     }
@@ -68,7 +78,7 @@
 
       const ref = db.ref("sala/slots/" + id);
       ref.once("value").then(snap => {
-        if (snap.exists()) {
+        if (snap.exists() && snap.val() !== null) {
           alert("Lugar ocupado!");
         } else {
           ref.set(usuario);
@@ -80,14 +90,11 @@
 
     db.ref("sala/slots").on("value", snap => {
       const dados = snap.val() || {};
-      let ocupados = 0;
-
       for (let i = 1; i <= 4; i++) {
         const el = document.getElementById("slot" + i);
         if (dados[i]) {
           el.textContent = dados[i];
           el.classList.add("ocupado");
-          ocupados++;
         } else {
           el.textContent = "Lugar " + i;
           el.classList.remove("ocupado");
@@ -99,7 +106,7 @@
         const j1 = dados[meuSlot];
         const j2 = dados[pares[meuSlot]];
         const jogoId = `${j1}_vs_${j2}`.replace(/\s/g, "_");
-        window.location.href = `jogo.html?j1=${encodeURIComponent(j1)}&j2=${encodeURIComponent(j2)}&id=${jogoId}`;
+        window.location.href = `jogo.html?j1=${encodeURIComponent(j1)}&j2=${encodeURIComponent(j2)}&id=${jogoId}&t=${Date.now()}`;
       } else {
         status.textContent = "Aguardando outro jogador...";
       }
@@ -114,6 +121,8 @@
       animation: grad 15s ease infinite;
       color: #fff;
       text-align: center;
+      min-height: 100vh;
+      position: relative;
     }
 
     @keyframes grad {
@@ -147,6 +156,24 @@
     .slot:hover { transform: scale(1.05); box-shadow: 0 0 20px #fff; }
     .ocupado { background:#4CAF50; box-shadow:0 0 20px #4CAF50; }
     #statusSala { margin-top:20px; font-size:18px; font-weight:bold; }
+
+    /* Rodapé */
+    #rodapeEntrada, #rodapeSala {
+      position: fixed;
+      bottom: 5px;
+      width: 100%;
+      text-align: center;
+      font-size: 14px;
+      color: #ccc;
+    }
+    #rodapeEntrada a, #rodapeSala a {
+      color: #ff9800;
+      text-decoration: none;
+      font-weight: bold;
+    }
+    #rodapeEntrada a:hover, #rodapeSala a:hover {
+      text-decoration: underline;
+    }
   </style>
 </body>
-</html>
+  </html>
