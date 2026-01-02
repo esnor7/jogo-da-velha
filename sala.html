@@ -79,11 +79,17 @@
       }
 
       const status = document.getElementById("statusSala");
+
+      // Verifica se meu slot e o par estão ocupados
       if(meuSlot && dados[meuSlot] && dados[pares[meuSlot]]) {
         const j1 = dados[meuSlot];
         const j2 = dados[pares[meuSlot]];
         const jogoId = `${j1}_vs_${j2}`.replace(/\s/g, "_");
-        window.location.href = `jogo.html?j1=${encodeURIComponent(j1)}&j2=${encodeURIComponent(j2)}&id=${jogoId}&t=${Date.now()}`;
+
+        // Redireciona apenas se ainda não estiver na partida
+        if (!window.location.href.includes(`id=${jogoId}`)) {
+          window.location.href = `jogo.html?j1=${encodeURIComponent(j1)}&j2=${encodeURIComponent(j2)}&id=${jogoId}&t=${Date.now()}`;
+        }
       } else {
         status.textContent = "Aguardando outro jogador...";
       }
