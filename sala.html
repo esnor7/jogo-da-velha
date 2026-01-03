@@ -22,8 +22,7 @@
     </div>
 
     <p id="rodapeSala">
-      Site desenvolvido por 
-      <a href="https://www.instagram.com/dpzyn_?igsh=MTJ4dWlsczl2aHdhaw==" target="_blank">Davi</a>
+      Site desenvolvido por <span style="color:#00f;">Davi</span>
     </p>
   </div>
 
@@ -59,7 +58,7 @@
           ref.set(usuario);
           meuSlot = id;
 
-          // REMOVE automaticamente se desconectar ou fechar aba
+          // remove automaticamente se desconectar ou fechar aba
           ref.onDisconnect().remove();
         }
       });
@@ -124,8 +123,6 @@
     .ocupado { background:#4CAF50; box-shadow:0 0 20px #4CAF50; }
     #statusSala { margin-top:20px; font-size:18px; font-weight:bold; }
     #rodapeSala { position: fixed; bottom: 5px; width: 100%; text-align: center; font-size:14px; color:#ccc; }
-    #rodapeSala a { color:#00f; text-decoration:none; font-weight:bold; }
-    #rodapeSala a:hover { text-decoration:underline; }
   </style>
 </body>
 </html>
