@@ -2,115 +2,203 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
-  <title>Sala de Jogo da Velha</title>
+  <title>Jogo da Velha Online</title>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;700&display=swap" rel="stylesheet">
 </head>
 <body>
-  <h1>Sala de Jogo da Velha</h1>
 
-  <div id="salaContainer">
-    <p id="statusSala">Aguardando jogadores...</p>
+<h2 id="info"></h2>
 
-    <div class="linha">
-      <div class="slot" id="slot1" onclick="sentar(1)">Lugar 1</div>
-      <div class="slot" id="slot2" onclick="sentar(2)">Lugar 2</div>
-    </div>
+<div class="tabuleiro">
+  <div class="casa" onclick="jogar(0)"></div>
+  <div class="casa" onclick="jogar(1)"></div>
+  <div class="casa" onclick="jogar(2)"></div>
 
-    <div class="linha">
-      <div class="slot" id="slot3" onclick="sentar(3)">Lugar 3</div>
-      <div class="slot" id="slot4" onclick="sentar(4)">Lugar 4</div>
-    </div>
+  <div class="casa" onclick="jogar(3)"></div>
+  <div class="casa" onclick="jogar(4)"></div>
+  <div class="casa" onclick="jogar(5)"></div>
 
-    <p id="rodapeSala">
-      Site desenvolvido por 
-      <a href="https://www.instagram.com/dpzyn_?igsh=MTJ4dWlsczl2aHdhaw==" target="_blank">Davi</a>
-    </p>
-  </div>
+  <div class="casa" onclick="jogar(6)"></div>
+  <div class="casa" onclick="jogar(7)"></div>
+  <div class="casa" onclick="jogar(8)"></div>
+</div>
 
-  <!-- FIREBASE -->
-  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+<button onclick="resetar()">Reiniciar</button>
 
-  <script>
-    // Pega o nome do sessionStorage
-    const usuario = sessionStorage.getItem("usuario");
-    if(!usuario) {
-      alert("Nome não informado! Voltando à página inicial.");
-      window.location.href = "index.html";
-    }
+<p id="rodapeJogo">
+  Site desenvolvido por 
+  <a href="https://www.instagram.com/dpzyn_?igsh=MTJ4dWlsczl2aHdhaw==" target="_blank">Davi</a>
+</p>
 
-    firebase.initializeApp({
-      apiKey: "AIzaSyAMPqH-lyB4X_whlGIW189rd5KVi2fM-IE",
-      authDomain: "jogo-da-velha-online-36836.firebaseapp.com",
-      databaseURL: "https://jogo-da-velha-online-36836-default-rtdb.firebaseio.com",
-      projectId: "jogo-da-velha-online-36836"
+<!-- FIREBASE -->
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+
+<script>
+firebase.initializeApp({
+  apiKey: "AIzaSyAMPqH-lyB4X_whlGIW189rd5KVi2fM-IE",
+  authDomain: "jogo-da-velha-online-36836.firebaseapp.com",
+  databaseURL: "https://jogo-da-velha-online-36836-default-rtdb.firebaseio.com",
+  projectId: "jogo-da-velha-online-36836"
+});
+
+const db = firebase.database();
+</script>
+
+<script>
+// Pega usuário e jogoId do sessionStorage
+const usuario = sessionStorage.getItem("usuario");
+const jogoId = sessionStorage.getItem("jogoId");
+
+if(!usuario || !jogoId){
+  alert("Você não está em uma partida! Voltando à página inicial.");
+  window.location.href = "index.html";
+}
+
+const jogoRef = db.ref("jogos/" + jogoId);
+
+const info = document.getElementById("info");
+const casas = document.querySelectorAll(".casa");
+
+let meuSimbolo = "";
+
+jogoRef.once("value").then(snap => {
+  const dados = snap.val();
+  if(!dados) return;
+
+  if(usuario === dados.j1) meuSimbolo = "X";
+  else if(usuario === dados.j2) meuSimbolo = "O";
+  else {
+    alert("Você não está nessa partida!");
+    window.location.href = "index.html";
+  }
+
+  // Cria partida se não existir
+  if(!snap.exists()){
+    jogoRef.set({
+      tabuleiro:["","","","","","","","",""],
+      turno:"X",
+      ativo:true,
+      j1:dados.j1,
+      j2:dados.j2
     });
+  }
+});
 
-    const db = firebase.database();
-    let meuSlot = null;
-    const pares = { 1:2, 2:1, 3:4, 4:3 };
+const vitorias = [
+  [0,1,2],[3,4,5],[6,7,8],
+  [0,3,6],[1,4,7],[2,5,8],
+  [0,4,8],[2,4,6]
+];
 
-    function sentar(id) {
-      if(meuSlot) return alert("Você já está sentado!");
-      const ref = db.ref("sala/slots/" + id);
-      ref.once("value").then(snap => {
-        if(snap.exists() && snap.val() !== null) {
-          alert("Lugar ocupado!");
-        } else {
-          ref.set(usuario);
-          meuSlot = id;
-          window.addEventListener("beforeunload", () => ref.remove());
-        }
-      });
+function jogar(pos){
+  jogoRef.once("value").then(snap=>{
+    const dados = snap.val();
+    if(!dados || !dados.ativo) return;
+    if(dados.turno !== meuSimbolo) return;
+    if(dados.tabuleiro[pos] !== "") return;
+
+    dados.tabuleiro[pos] = meuSimbolo;
+    dados.turno = meuSimbolo === "X" ? "O" : "X";
+
+    jogoRef.set(dados);
+  });
+}
+
+jogoRef.on("value", snap=>{
+  const dados = snap.val();
+  if(!dados) return;
+
+  casas.forEach((casa,i)=> casa.textContent = dados.tabuleiro[i]);
+
+  if(dados.ativo){
+    info.textContent = `Vez de ${dados.turno === "X" ? dados.j1 : dados.j2}`;
+  }
+
+  verificarFim(dados);
+});
+
+function verificarFim(dados){
+  for(let [a,b,c] of vitorias){
+    if(dados.tabuleiro[a] && dados.tabuleiro[a] === dados.tabuleiro[b] && dados.tabuleiro[a] === dados.tabuleiro[c]){
+      info.textContent = `🏆 Vencedor: ${dados.tabuleiro[a]==="X"?dados.j1:dados.j2}`;
+      jogoRef.update({ativo:false});
+      return;
     }
+  }
 
-    db.ref("sala/slots").on("value", snap => {
-      const dados = snap.val() || {};
-      for(let i=1; i<=4; i++){
-        const el = document.getElementById("slot"+i);
-        if(dados[i]){
-          el.textContent = dados[i];
-          el.classList.add("ocupado");
-        } else {
-          el.textContent = "Lugar " + i;
-          el.classList.remove("ocupado");
-        }
-      }
+  if(!dados.tabuleiro.includes("")){
+    info.textContent = "🤝 Empate!";
+    jogoRef.update({ativo:false});
+  }
+}
 
-      const status = document.getElementById("statusSala");
+function resetar(){
+  jogoRef.set({
+    tabuleiro:["","","","","","","","",""],
+    turno:"X",
+    ativo:true,
+    j1: jogoId.split("_vs_")[0],
+    j2: jogoId.split("_vs_")[1]
+  });
+}
+</script>
 
-      // Verifica se algum par de jogadores está completo
-      for(const [slot, par] of Object.entries(pares)){
-        if(dados[slot] && dados[par]){
-          const j1 = dados[slot];
-          const j2 = dados[par];
-          const jogoId = `${j1}_vs_${j2}`.replace(/\s/g,"_");
+<style>
+body {
+  background:#111;
+  color:#fff;
+  text-align:center;
+  font-family:'Poppins',sans-serif;
+  padding:20px;
+}
 
-          // Redireciona apenas se o usuário atual estiver nesse par
-          if(usuario === j1 || usuario === j2){
-            sessionStorage.setItem("jogoId", jogoId);
-            window.location.href = `jogo.html`;
-          }
-          return;
-        }
-      }
+.tabuleiro{
+  display:grid;
+  grid-template-columns:repeat(3,100px);
+  gap:10px;
+  justify-content:center;
+  margin:20px auto;
+}
 
-      status.textContent = "Aguardando outro jogador...";
-    });
-  </script>
+.casa{
+  width:100px;
+  height:100px;
+  background:#333;
+  font-size:50px;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  cursor:pointer;
+  border-radius:8px;
+}
 
-  <style>
-    body { font-family: 'Poppins', sans-serif; background: linear-gradient(-45deg,#111,#222,#333,#444); background-size:400% 400%; animation:grad 15s ease infinite; color:#fff; text-align:center; min-height:100vh; position:relative; }
-    @keyframes grad {0%{background-position:0% 50%} 50%{background-position:100% 50%} 100%{background-position:0% 50%}}
-    h1 { margin-bottom:20px; }
-    .linha { display:flex; justify-content:center; margin-top:20px; }
-    .slot { width:140px; height:100px; margin:10px; background:#333; display:flex; justify-content:center; align-items:center; cursor:pointer; border-radius:12px; font-weight:bold; font-size:18px; transition: all 0.3s; box-shadow:0 0 5px #000; }
-    .slot:hover { transform: scale(1.05); box-shadow:0 0 20px #fff; }
-    .ocupado { background:#4CAF50; box-shadow:0 0 20px #4CAF50; }
-    #statusSala { margin-top:20px; font-size:18px; font-weight:bold; }
-    #rodapeSala { position: fixed; bottom: 5px; width: 100%; text-align: center; font-size:14px; color:#ccc; }
-    #rodapeSala a { color:#1E90FF; text-decoration:none; font-weight:bold; }
-    #rodapeSala a:hover { text-decoration:underline; }
-  </style>
+.casa:hover{background:#555}
+
+button{
+  padding:10px 20px;
+  font-size:16px;
+  border-radius:8px;
+  border:none;
+  cursor:pointer;
+  background:#888; /* cinza neutro */
+  color:#fff;
+  margin-top:20px;
+}
+
+#rodapeJogo{
+  margin-top:30px;
+  font-size:14px;
+  color:#ccc;
+}
+#rodapeJogo a{
+  color:#1E90FF;
+  text-decoration:none;
+  font-weight:bold;
+}
+#rodapeJogo a:hover{
+  text-decoration:underline;
+}
+</style>
 </body>
 </html>
