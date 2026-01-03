@@ -72,6 +72,12 @@ if(!usuario || (usuario !== j1 && usuario !== j2)){
   window.location.href = "index.html";
 }
 
+// Sorteia aleatoriamente X ou O
+function sortearSimbolos() {
+  return Math.random() < 0.5 ? (usuario === j1 ? "X" : "O") : (usuario === j1 ? "O" : "X");
+}
+
+let meuSimbolo = sortearSimbolos();
 const jogoRef = db.ref("jogos/" + jogoId);
 const info = document.getElementById("info");
 const casas = document.querySelectorAll(".casa");
@@ -83,16 +89,57 @@ musicaFundo.play().catch(()=> {
   document.body.addEventListener("click", ()=> musicaFundo.play(), {once:true});
 });
 
+// ajustar volume via select
 function ajustarVolume(){
   musicaFundo.volume = parseFloat(document.getElementById("volumeMusica").value);
 }
 
-// vitorias
 const vitorias = [
   [0,1,2],[3,4,5],[6,7,8],
   [0,3,6],[1,4,7],[2,5,8],
   [0,4,8],[2,4,6]
 ];
+
+jogoRef.once("value").then(snap => {
+  if(!snap.exists()){
+    jogoRef.set({
+      tabuleiro: ["","","","","","","","",""],
+      turno: "X",
+      ativo: true,
+      j1,
+      j2
+    });
+  }
+});
+
+function jogar(pos){
+  jogoRef.once("value").then(snap => {
+    const dados = snap.val();
+    if(!dados || !dados.ativo) return;
+
+    if(dados.turno !== meuSimbolo) return;
+    if(dados.tabuleiro[pos] !== "") return;
+
+    dados.tabuleiro[pos] = meuSimbolo;
+    dados.turno = meuSimbolo === "X" ? "O" : "X";
+    jogoRef.set(dados);
+  });
+}
+
+jogoRef.on("value", snap => {
+  const dados = snap.val();
+  if(!dados) return;
+
+  casas.forEach((casa,i)=>{
+    casa.textContent = dados.tabuleiro[i];
+  });
+
+  if(dados.ativo){
+    info.textContent = `Vez de ${dados.turno === "X" ? dados.j1 : dados.j2}`;
+  }
+
+  verificarFim(dados);
+});
 
 // Cria overlay central de vitória/derrota
 function mostrarMensagemCentral(mensagem, cor){
@@ -107,84 +154,28 @@ function mostrarMensagemCentral(mensagem, cor){
   overlay.style.display = "flex";
 }
 
-// Ao criar o jogo, sorteia quem começa
-function criarOuResetarJogo() {
-  const turnoInicial = Math.random() < 0.5 ? "X" : "O";
-  jogoRef.set({
-    tabuleiro:["","","","","","","","",""],
-    turno: turnoInicial,
-    ativo:true,
-    j1,
-    j2,
-    fim:false
-  });
-  meuSimbolo = (turnoInicial === "X" ? (usuario===j1 ? "X" : "O") : (usuario===j1 ? "O" : "X"));
-}
-
-// Primeiro carregamento
-jogoRef.once("value").then(snap => {
-  if(!snap.exists()) criarOuResetarJogo();
-});
-
-// Jogar
-function jogar(pos){
-  jogoRef.once("value").then(snap => {
-    const dados = snap.val();
-    if(!dados || !dados.ativo) return;
-    if(dados.turno !== meuSimbolo) return;
-    if(dados.tabuleiro[pos] !== "") return;
-
-    dados.tabuleiro[pos] = meuSimbolo;
-    dados.turno = meuSimbolo === "X" ? "O" : "X";
-    jogoRef.set(dados);
-  });
-}
-
-// Atualiza visual
-jogoRef.on("value", snap => {
-  const dados = snap.val();
-  if(!dados) return;
-
-  casas.forEach((casa,i)=>{
-    casa.textContent = dados.tabuleiro[i];
-  });
-
-  // Mostra turno se ativo
-  if(dados.ativo) info.textContent = `Vez de ${dados.turno === "X" ? dados.j1 : dados.j2}`;
-
-  // Overlay de fim
-  if(dados.fim){
-    if(dados.vencedor === usuario) {
-      mostrarMensagemCentral("🏆 Vitória!", "lime");
-      explosaoConfete();
-    } else if(dados.vencedor) {
-      mostrarMensagemCentral("💀 Derrota!", "red");
-    } else {
-      mostrarMensagemCentral("🤝 Empate!", "orange");
-      explosaoConfete();
-    }
-  }
-});
-
-// Verifica fim
 function verificarFim(dados){
-  if(dados.fim) return; // já finalizado
-
   let vencedor = null;
   for(let [a,b,c] of vitorias){
     if(dados.tabuleiro[a] && dados.tabuleiro[a]===dados.tabuleiro[b] && dados.tabuleiro[a]===dados.tabuleiro[c]){
       vencedor = dados.tabuleiro[a] === "X" ? dados.j1 : dados.j2;
-      jogoRef.update({ativo:false, fim:true, vencedor});
+      jogoRef.update({ativo:false});
+      if(vencedor === usuario){
+        mostrarMensagemCentral("🏆 Vitória!", "lime");
+        explosaoConfete();
+      } else {
+        mostrarMensagemCentral("💀 Derrota!", "red");
+      }
       return;
     }
   }
-
   if(!dados.tabuleiro.includes("")){
-    jogoRef.update({ativo:false, fim:true, vencedor:null});
+    jogoRef.update({ativo:false});
+    mostrarMensagemCentral("🤝 Empate!", "orange");
+    explosaoConfete();
   }
 }
 
-// Confete
 function explosaoConfete(){
   for(let i=0;i<100;i++){
     const confete = document.createElement("div");
@@ -197,11 +188,17 @@ function explosaoConfete(){
   }
 }
 
-// Resetar
 function resetar(){
-  criarOuResetarJogo();
+  meuSimbolo = sortearSimbolos();
   let overlay = document.getElementById("overlayMensagem");
   if(overlay) overlay.style.display = "none";
+  jogoRef.set({
+    tabuleiro:["","","","","","","","",""],
+    turno:"X",
+    ativo:true,
+    j1,
+    j2
+  });
 }
 </script>
 
@@ -301,4 +298,4 @@ button {
 </style>
 
 </body>
-  </html>
+</html>
