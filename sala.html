@@ -32,12 +32,11 @@
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
 
   <script>
-    // Pega o nome passado na URL
-    const urlParams = new URLSearchParams(window.location.search);
-    const usuario = urlParams.get('nome');
+    // pega o nome do sessionStorage
+    const usuario = sessionStorage.getItem("usuario");
     if(!usuario) {
       alert("Nome não informado! Voltando à página inicial.");
-      window.location.href = 'index.html';
+      window.location.href = "index.html";
     }
 
     firebase.initializeApp({
@@ -60,11 +59,13 @@
         } else {
           ref.set(usuario);
           meuSlot = id;
+          // remove ao fechar a aba
           window.addEventListener("beforeunload", () => ref.remove());
         }
       });
     }
 
+    // Atualiza a sala em tempo real
     db.ref("sala/slots").on("value", snap => {
       const dados = snap.val() || {};
       for(let i=1; i<=4; i++) {
@@ -80,19 +81,22 @@
 
       const status = document.getElementById("statusSala");
 
-      // Verifica se meu slot e o par estão ocupados
-      if(meuSlot && dados[meuSlot] && dados[pares[meuSlot]]) {
-        const j1 = dados[meuSlot];
-        const j2 = dados[pares[meuSlot]];
-        const jogoId = `${j1}_vs_${j2}`.replace(/\s/g, "_");
+      // percorre os pares e leva ambos jogadores para a partida se completos
+      for(const [slot, par] of Object.entries(pares)) {
+        if(dados[slot] && dados[par]) {
+          const j1 = dados[slot];
+          const j2 = dados[par];
+          const jogoId = `${j1}_vs_${j2}`.replace(/\s/g, "_");
 
-        // Redireciona apenas se ainda não estiver na partida
-        if (!window.location.href.includes(`id=${jogoId}`)) {
-          window.location.href = `jogo.html?j1=${encodeURIComponent(j1)}&j2=${encodeURIComponent(j2)}&id=${jogoId}&t=${Date.now()}`;
+          // só redireciona se o usuário estiver em um desses slots
+          if(usuario === j1 || usuario === j2) {
+            window.location.href = `jogo.html?j1=${encodeURIComponent(j1)}&j2=${encodeURIComponent(j2)}&id=${jogoId}&t=${Date.now()}`;
+          }
+          return; // evita redirecionar múltiplas vezes
         }
-      } else {
-        status.textContent = "Aguardando outro jogador...";
       }
+
+      status.textContent = "Aguardando outro jogador...";
     });
   </script>
 
