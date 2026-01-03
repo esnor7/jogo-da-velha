@@ -32,8 +32,8 @@
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
 
   <script>
-    const usuario = sessionStorage.getItem("usuario");
-    if(!usuario){
+    const usuario = sessionStorage.getItem("usuario")?.trim();
+    if(!usuario) {
       alert("Nome não informado! Voltando à página inicial.");
       window.location.href = "index.html";
     }
@@ -47,13 +47,13 @@
 
     const db = firebase.database();
     let meuSlot = null;
-    const pares = {1:2, 2:1, 3:4, 4:3};
+    const pares = { 1:2, 2:1, 3:4, 4:3 };
 
-    function sentar(id){
+    function sentar(id) {
       if(meuSlot) return alert("Você já está sentado!");
       const ref = db.ref("sala/slots/" + id);
       ref.once("value").then(snap => {
-        if(snap.exists() && snap.val() !== null){
+        if(snap.exists() && snap.val() !== null) {
           alert("Lugar ocupado!");
         } else {
           ref.set(usuario);
@@ -65,7 +65,7 @@
 
     db.ref("sala/slots").on("value", snap => {
       const dados = snap.val() || {};
-      for(let i=1;i<=4;i++){
+      for(let i=1; i<=4; i++){
         const el = document.getElementById("slot"+i);
         if(dados[i]){
           el.textContent = dados[i];
@@ -77,21 +77,24 @@
       }
 
       const status = document.getElementById("statusSala");
-      status.textContent = "Aguardando outro jogador...";
+      let partidaIniciada = false;
 
-      // percorre os pares e leva ambos jogadores para a partida se completos
       for(const [slot, par] of Object.entries(pares)){
         if(dados[slot] && dados[par]){
-          const j1 = dados[slot];
-          const j2 = dados[par];
+          const j1 = dados[slot].trim();
+          const j2 = dados[par].trim();
           const jogoId = `${j1}_vs_${j2}`.replace(/\s/g, "_");
 
           if(usuario === j1 || usuario === j2){
-            // passa o jogoId e o usuário pela URL
             window.location.href = `jogo.html?j1=${encodeURIComponent(j1)}&j2=${encodeURIComponent(j2)}&usuario=${encodeURIComponent(usuario)}&id=${jogoId}&t=${Date.now()}`;
+            partidaIniciada = true;
           }
-          return; // evita múltiplos redirecionamentos
+          break;
         }
+      }
+
+      if(!partidaIniciada){
+        status.textContent = "Aguardando outro jogador...";
       }
     });
   </script>
