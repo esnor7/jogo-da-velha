@@ -13,9 +13,11 @@
   <div class="casa" onclick="jogar(0)"></div>
   <div class="casa" onclick="jogar(1)"></div>
   <div class="casa" onclick="jogar(2)"></div>
+
   <div class="casa" onclick="jogar(3)"></div>
   <div class="casa" onclick="jogar(4)"></div>
   <div class="casa" onclick="jogar(5)"></div>
+
   <div class="casa" onclick="jogar(6)"></div>
   <div class="casa" onclick="jogar(7)"></div>
   <div class="casa" onclick="jogar(8)"></div>
@@ -41,14 +43,13 @@ firebase.initializeApp({
 });
 
 const db = firebase.database();
-</script>
 
-<script>
+// parâmetros da URL
 const params = new URLSearchParams(window.location.search);
-const j1 = params.get("j1");
-const j2 = params.get("j2");
+const j1 = params.get("j1")?.trim();
+const j2 = params.get("j2")?.trim();
+const usuario = params.get("usuario")?.trim();
 const jogoId = params.get("id");
-const usuario = params.get("usuario"); // agora vem da URL
 
 if(!usuario || (usuario !== j1 && usuario !== j2)){
   alert("Você não está em uma partida! Voltando à página inicial.");
@@ -56,6 +57,7 @@ if(!usuario || (usuario !== j1 && usuario !== j2)){
 }
 
 let meuSimbolo = usuario === j1 ? "X" : "O";
+
 const jogoRef = db.ref("jogos/" + jogoId);
 
 const info = document.getElementById("info");
@@ -68,11 +70,11 @@ const vitorias = [
 ];
 
 jogoRef.once("value").then(snap => {
-  if(!snap.exists()){
+  if (!snap.exists()) {
     jogoRef.set({
-      tabuleiro:["","","","","","","","",""],
-      turno:"X",
-      ativo:true,
+      tabuleiro: ["","","","","","","","",""],
+      turno: "X",
+      ativo: true,
       j1,
       j2
     });
@@ -80,7 +82,7 @@ jogoRef.once("value").then(snap => {
 });
 
 function jogar(pos){
-  jogoRef.once("value").then(snap=>{
+  jogoRef.once("value").then(snap => {
     const dados = snap.val();
     if(!dados || !dados.ativo) return;
     if(dados.turno !== meuSimbolo) return;
@@ -88,42 +90,43 @@ function jogar(pos){
 
     dados.tabuleiro[pos] = meuSimbolo;
     dados.turno = meuSimbolo === "X" ? "O" : "X";
+
     jogoRef.set(dados);
   });
 }
 
-jogoRef.on("value", snap=>{
+jogoRef.on("value", snap => {
   const dados = snap.val();
   if(!dados) return;
 
-  casas.forEach((casa,i)=>{
-    casa.textContent = dados.tabuleiro[i];
-  });
+  casas.forEach((casa, i) => casa.textContent = dados.tabuleiro[i]);
 
-  info.textContent = dados.ativo ? `Vez de ${dados.turno === "X" ? dados.j1 : dados.j2}` : "";
+  if(dados.ativo){
+    info.textContent = `Vez de ${dados.turno === "X" ? dados.j1 : dados.j2}`;
+  }
+
   verificarFim(dados);
 });
 
 function verificarFim(dados){
   for(let [a,b,c] of vitorias){
-    if(dados.tabuleiro[a] && dados.tabuleiro[a]===dados.tabuleiro[b] && dados.tabuleiro[a]===dados.tabuleiro[c]){
+    if(dados.tabuleiro[a] && dados.tabuleiro[a] === dados.tabuleiro[b] && dados.tabuleiro[a] === dados.tabuleiro[c]){
       info.textContent = `🏆 Vencedor: ${dados.tabuleiro[a] === "X" ? dados.j1 : dados.j2}`;
-      jogoRef.update({ativo:false});
+      jogoRef.update({ ativo: false });
       return;
     }
   }
-
   if(!dados.tabuleiro.includes("")){
     info.textContent = "🤝 Empate!";
-    jogoRef.update({ativo:false});
+    jogoRef.update({ ativo: false });
   }
 }
 
 function resetar(){
   jogoRef.set({
-    tabuleiro:["","","","","","","","",""],
-    turno:"X",
-    ativo:true,
+    tabuleiro: ["","","","","","","","",""],
+    turno: "X",
+    ativo: true,
     j1,
     j2
   });
@@ -132,48 +135,61 @@ function resetar(){
 
 <style>
 body {
-  background:#111;
-  color:#fff;
-  text-align:center;
-  font-family:'Poppins', sans-serif;
-  padding:20px;
+  background: #111;
+  color: #fff;
+  text-align: center;
+  font-family: 'Poppins', sans-serif;
+  padding: 20px;
 }
-.tabuleiro{
-  display:grid;
-  grid-template-columns:repeat(3,100px);
-  gap:10px;
-  justify-content:center;
-  margin:20px auto;
+
+.tabuleiro {
+  display: grid;
+  grid-template-columns: repeat(3, 100px);
+  gap: 10px;
+  justify-content: center;
+  margin: 20px auto;
 }
-.casa{
-  width:100px;
-  height:100px;
-  background:#333;
-  font-size:50px;
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  cursor:pointer;
-  border-radius:8px;
+
+.casa {
+  width: 100px;
+  height: 100px;
+  background: #333;
+  font-size: 50px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  border-radius: 8px;
 }
-.casa:hover{background:#555;}
-button{
-  padding:10px 20px;
-  font-size:16px;
-  border-radius:8px;
-  border:none;
-  cursor:pointer;
-  background:#aaa; /* cinza */
-  color:#fff;
-  margin-top:20px;
+
+.casa:hover {
+  background: #555;
 }
-#rodapeJogo{
-  margin-top:30px;
-  font-size:14px;
-  color:#ccc;
+
+button {
+  padding: 10px 20px;
+  font-size: 16px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  background: #ff9800;
+  color: #fff;
+  margin-top: 20px;
 }
-#rodapeJogo a{color:#00f;} /* Davi em azul */
-#rodapeJogo a:hover{text-decoration:underline;}
+
+#rodapeJogo {
+  margin-top: 30px;
+  font-size: 14px;
+  color: #ccc;
+}
+#rodapeJogo a {
+  color: #ff9800;
+  text-decoration: none;
+  font-weight: bold;
+}
+#rodapeJogo a:hover {
+  text-decoration: underline;
+}
 </style>
 
 </body>
