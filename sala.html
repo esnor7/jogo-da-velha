@@ -2,6 +2,7 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- ESSENCIAL -->
   <title>Sala de Jogo da Velha</title>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;700&display=swap" rel="stylesheet">
 </head>
@@ -57,14 +58,11 @@
         } else {
           ref.set(usuario);
           meuSlot = id;
-
-          // remove automaticamente se desconectar ou fechar aba
           ref.onDisconnect().remove();
         }
       });
     }
 
-    // Atualiza a sala em tempo real
     db.ref("sala/slots").on("value", snap => {
       const dados = snap.val() || {};
       for(let i=1;i<=4;i++){
@@ -79,21 +77,17 @@
       }
 
       const status = document.getElementById("statusSala");
-
-      // verifica se algum par está completo e redireciona
       for(const [slot, par] of Object.entries(pares)){
         if(dados[slot] && dados[par]){
           const j1 = dados[slot];
           const j2 = dados[par];
           const jogoId = `${j1}_vs_${j2}`.replace(/\s/g,"_");
-
           if(usuario === j1 || usuario === j2){
             window.location.href = `jogo.html?j1=${encodeURIComponent(j1)}&j2=${encodeURIComponent(j2)}&usuario=${encodeURIComponent(usuario)}&id=${jogoId}&t=${Date.now()}`;
           }
-          return; // evita redirecionamento múltiplo
+          return;
         }
       }
-
       status.textContent = "Aguardando outro jogador...";
     });
   </script>
@@ -104,25 +98,26 @@
       background: linear-gradient(-45deg,#111,#222,#333,#444); 
       background-size:400% 400%; 
       animation:grad 15s ease infinite; 
-      color:#fff; text-align:center; min-height:100vh; position:relative; 
+      color:#fff; text-align:center; min-height:100vh; margin:0; padding:20px; 
     }
     @keyframes grad {
       0%{background-position:0% 50%} 
       50%{background-position:100% 50%} 
       100%{background-position:0% 50%}
     }
-    h1 { margin-bottom:20px; }
-    .linha { display:flex; justify-content:center; margin-top:20px; }
+    h1 { margin-bottom:20px; font-size:2em; }
+    .linha { display:flex; justify-content:center; margin-top:20px; flex-wrap:wrap; }
     .slot { 
-      width:140px; height:100px; margin:10px; background:#333; 
+      width:45vw; max-width:200px; height:18vw; max-height:100px; 
+      margin:10px; background:#333; 
       display:flex; justify-content:center; align-items:center; cursor:pointer; 
-      border-radius:12px; font-weight:bold; font-size:18px; 
+      border-radius:12px; font-weight:bold; font-size:4vw; 
       transition: all 0.3s; box-shadow:0 0 5px #000; 
     }
     .slot:hover { transform: scale(1.05); box-shadow:0 0 20px #fff; }
     .ocupado { background:#4CAF50; box-shadow:0 0 20px #4CAF50; }
-    #statusSala { margin-top:20px; font-size:18px; font-weight:bold; }
-    #rodapeSala { position: fixed; bottom: 5px; width: 100%; text-align: center; font-size:14px; color:#ccc; }
+    #statusSala { margin-top:20px; font-size:4vw; font-weight:bold; }
+    #rodapeSala { position: fixed; bottom: 5px; width: 100%; text-align: center; font-size:3vw; color:#ccc; }
   </style>
 </body>
 </html>
