@@ -32,7 +32,7 @@
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
 
   <script>
-    // pega o nome do sessionStorage
+    // Pega o nome do sessionStorage
     const usuario = sessionStorage.getItem("usuario");
     if(!usuario) {
       alert("Nome não informado! Voltando à página inicial.");
@@ -59,18 +59,16 @@
         } else {
           ref.set(usuario);
           meuSlot = id;
-          // remove ao fechar a aba
           window.addEventListener("beforeunload", () => ref.remove());
         }
       });
     }
 
-    // Atualiza a sala em tempo real
     db.ref("sala/slots").on("value", snap => {
       const dados = snap.val() || {};
-      for(let i=1; i<=4; i++) {
+      for(let i=1; i<=4; i++){
         const el = document.getElementById("slot"+i);
-        if(dados[i]) {
+        if(dados[i]){
           el.textContent = dados[i];
           el.classList.add("ocupado");
         } else {
@@ -81,18 +79,19 @@
 
       const status = document.getElementById("statusSala");
 
-      // percorre os pares e leva ambos jogadores para a partida se completos
-      for(const [slot, par] of Object.entries(pares)) {
-        if(dados[slot] && dados[par]) {
+      // Verifica se algum par de jogadores está completo
+      for(const [slot, par] of Object.entries(pares)){
+        if(dados[slot] && dados[par]){
           const j1 = dados[slot];
           const j2 = dados[par];
-          const jogoId = `${j1}_vs_${j2}`.replace(/\s/g, "_");
+          const jogoId = `${j1}_vs_${j2}`.replace(/\s/g,"_");
 
-          // só redireciona se o usuário estiver em um desses slots
-          if(usuario === j1 || usuario === j2) {
-            window.location.href = `jogo.html?j1=${encodeURIComponent(j1)}&j2=${encodeURIComponent(j2)}&id=${jogoId}&t=${Date.now()}`;
+          // Redireciona apenas se o usuário atual estiver nesse par
+          if(usuario === j1 || usuario === j2){
+            sessionStorage.setItem("jogoId", jogoId);
+            window.location.href = `jogo.html`;
           }
-          return; // evita redirecionar múltiplas vezes
+          return;
         }
       }
 
@@ -110,7 +109,7 @@
     .ocupado { background:#4CAF50; box-shadow:0 0 20px #4CAF50; }
     #statusSala { margin-top:20px; font-size:18px; font-weight:bold; }
     #rodapeSala { position: fixed; bottom: 5px; width: 100%; text-align: center; font-size:14px; color:#ccc; }
-    #rodapeSala a { color:#ff9800; text-decoration:none; font-weight:bold; }
+    #rodapeSala a { color:#1E90FF; text-decoration:none; font-weight:bold; }
     #rodapeSala a:hover { text-decoration:underline; }
   </style>
 </body>
