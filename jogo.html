@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <title>Jogo da Velha Online</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;700&display=swap" rel="stylesheet">
 </head>
 <body>
 
@@ -24,6 +25,11 @@
 
 <button onclick="resetar()">Reiniciar</button>
 
+<p id="rodapeJogo">
+  Site desenvolvido por 
+  <a href="https://www.instagram.com/dpzyn_?igsh=MTJ4dWlsczl2aHdhaw==" target="_blank">Davi</a>
+</p>
+
 <!-- FIREBASE -->
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
@@ -40,17 +46,21 @@ const db = firebase.database();
 </script>
 
 <script>
+// pega os parâmetros da URL
 const params = new URLSearchParams(window.location.search);
 const j1 = params.get("j1");
 const j2 = params.get("j2");
 const jogoId = params.get("id");
 
-// identifica o jogador automaticamente
-const usuario = localStorage.getItem("usuario");
+// identifica automaticamente o jogador
+const usuario = params.get("usuario") || params.get("nome"); // caso queira passar usuario na URL
 let meuSimbolo = "";
 if (usuario === j1) meuSimbolo = "X";
 else if (usuario === j2) meuSimbolo = "O";
-else alert("Você não está nessa partida!");
+else {
+  alert("Você não está nessa partida!");
+  window.location.href = "index.html";
+}
 
 const jogoRef = db.ref("jogos/" + jogoId);
 
@@ -102,9 +112,9 @@ jogoRef.on("value", snap => {
     casa.textContent = dados.tabuleiro[i];
   });
 
-  info.textContent = dados.ativo
-      ? `Vez de ${dados.turno === "X" ? dados.j1 : dados.j2}`
-      : "";
+  if(dados.ativo){
+    info.textContent = `Vez de ${dados.turno === "X" ? dados.j1 : dados.j2}`;
+  }
 
   verificarFim(dados);
 });
@@ -144,7 +154,8 @@ body {
   background: #111;
   color: #fff;
   text-align: center;
-  font-family: Arial;
+  font-family: 'Poppins', sans-serif;
+  padding: 20px;
 }
 
 .tabuleiro {
@@ -179,6 +190,21 @@ button {
   cursor: pointer;
   background: #ff9800;
   color: #fff;
+  margin-top: 20px;
+}
+
+#rodapeJogo {
+  margin-top: 30px;
+  font-size: 14px;
+  color: #ccc;
+}
+#rodapeJogo a {
+  color: #ff9800;
+  text-decoration: none;
+  font-weight: bold;
+}
+#rodapeJogo a:hover {
+  text-decoration: underline;
 }
 </style>
 
