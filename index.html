@@ -26,19 +26,58 @@
         alert("Digite um nome para jogar!");
         return;
       }
-      // Redireciona para sala passando o nome na URL
-      window.location.href = `sala.html?nome=${encodeURIComponent(nome)}`;
+
+      // salva temporariamente na sessão
+      sessionStorage.setItem("usuario", nome);
+
+      // redireciona para a sala passando o nome via URL
+      window.location.href = `sala.html?usuario=${encodeURIComponent(nome)}`;
     }
   </script>
 
   <style>
-    body { font-family: 'Poppins', sans-serif; background-color: #111; color: #fff; text-align: center; padding: 50px; }
-    input { padding: 10px; margin: 5px; border-radius: 8px; border: none; outline: none; font-size: 16px; }
-    button { padding: 10px 20px; margin: 5px; cursor: pointer; border-radius: 8px; border: none; font-weight: bold; background-color: #ff9800; color: #fff; transition: 0.3s; }
-    button:hover { background-color: #e68a00; }
-    #rodapeEntrada { margin-top: 50px; font-size: 14px; color: #ccc; }
-    #rodapeEntrada a { color: #ff9800; text-decoration: none; font-weight: bold; }
-    #rodapeEntrada a:hover { text-decoration: underline; }
+    body { 
+      font-family: 'Poppins', sans-serif; 
+      background-color: #111; 
+      color: #fff; 
+      text-align: center; 
+      padding: 50px; 
+    }
+    input { 
+      padding: 10px; 
+      margin: 5px; 
+      border-radius: 8px; 
+      border: none; 
+      outline: none; 
+      font-size: 16px; 
+    }
+    button { 
+      padding: 10px 20px; 
+      margin: 5px; 
+      cursor: pointer; 
+      border-radius: 8px; 
+      border: none; 
+      font-weight: bold; 
+      background-color: #ff9800; 
+      color: #fff; 
+      transition: 0.3s; 
+    }
+    button:hover { 
+      background-color: #e68a00; 
+    }
+    #rodapeEntrada { 
+      margin-top: 50px; 
+      font-size: 14px; 
+      color: #ccc; 
+    }
+    #rodapeEntrada a { 
+      color: #ff9800; 
+      text-decoration: none; 
+      font-weight: bold; 
+    }
+    #rodapeEntrada a:hover { 
+      text-decoration: underline; 
+    }
   </style>
 </body>
 </html>
