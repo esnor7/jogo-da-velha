@@ -27,11 +27,11 @@
         return;
       }
 
-      // salva temporariamente na sessão
+      // Salva o nome no sessionStorage
       sessionStorage.setItem("usuario", nome);
 
-      // redireciona para a sala passando o nome via URL
-      window.location.href = `sala.html?usuario=${encodeURIComponent(nome)}`;
+      // Redireciona para a sala
+      window.location.href = 'sala.html';
     }
   </script>
 
@@ -58,12 +58,12 @@
       border-radius: 8px; 
       border: none; 
       font-weight: bold; 
-      background-color: #ff9800; 
+      background-color: #888; /* Cinza mais neutro */
       color: #fff; 
       transition: 0.3s; 
     }
     button:hover { 
-      background-color: #e68a00; 
+      background-color: #aaa; 
     }
     #rodapeEntrada { 
       margin-top: 50px; 
@@ -71,7 +71,7 @@
       color: #ccc; 
     }
     #rodapeEntrada a { 
-      color: #ff9800; 
+      color: #1E90FF; /* Azul para "Davi" */
       text-decoration: none; 
       font-weight: bold; 
     }
