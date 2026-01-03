@@ -27,11 +27,11 @@
         return;
       }
 
-      // Salva o nome no sessionStorage
+      // salva temporariamente na sessão
       sessionStorage.setItem("usuario", nome);
 
-      // Redireciona para a sala
-      window.location.href = 'sala.html';
+      // redireciona para a sala
+      window.location.href = `sala.html`;
     }
   </script>
 
@@ -58,7 +58,7 @@
       border-radius: 8px; 
       border: none; 
       font-weight: bold; 
-      background-color: #888; /* Cinza mais neutro */
+      background-color: #888; 
       color: #fff; 
       transition: 0.3s; 
     }
@@ -71,7 +71,7 @@
       color: #ccc; 
     }
     #rodapeEntrada a { 
-      color: #1E90FF; /* Azul para "Davi" */
+      color: #00f; 
       text-decoration: none; 
       font-weight: bold; 
     }
