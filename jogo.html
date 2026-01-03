@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- ESSENCIAL -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Jogo da Velha Online</title>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;700&display=swap" rel="stylesheet">
 </head>
@@ -28,6 +28,11 @@
   Site desenvolvido por <span style="color:#00f;">Davi</span>
 </p>
 
+<!-- Música de fundo -->
+<audio id="musicaFundo" loop>
+  <source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" type="audio/mpeg">
+</audio>
+
 <!-- FIREBASE -->
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
@@ -39,7 +44,6 @@ firebase.initializeApp({
   databaseURL: "https://jogo-da-velha-online-36836-default-rtdb.firebaseio.com",
   projectId: "jogo-da-velha-online-36836"
 });
-
 const db = firebase.database();
 </script>
 
@@ -57,11 +61,22 @@ if(!usuario || (usuario !== j1 && usuario !== j2)){
   window.location.href = "index.html";
 }
 
-let meuSimbolo = usuario === j1 ? "X" : "O";
+// Sorteia aleatoriamente X ou O
+function sortearSimbolos() {
+  return Math.random() < 0.5 ? (usuario === j1 ? "X" : "O") : (usuario === j1 ? "O" : "X");
+}
 
+let meuSimbolo = sortearSimbolos();
 const jogoRef = db.ref("jogos/" + jogoId);
 const info = document.getElementById("info");
 const casas = document.querySelectorAll(".casa");
+const musicaFundo = document.getElementById("musicaFundo");
+musicaFundo.volume = 0.15; // volume baixinho
+
+// Tenta autoplay; se bloqueado, espera interação
+musicaFundo.play().catch(()=> {
+  document.body.addEventListener("click", ()=> musicaFundo.play(), {once:true});
+});
 
 const vitorias = [
   [0,1,2],[3,4,5],[6,7,8],
@@ -115,16 +130,31 @@ function verificarFim(dados){
     if(dados.tabuleiro[a] && dados.tabuleiro[a]===dados.tabuleiro[b] && dados.tabuleiro[a]===dados.tabuleiro[c]){
       info.textContent = `🏆 Vencedor: ${dados.tabuleiro[a]==="X"?dados.j1:dados.j2}`;
       jogoRef.update({ativo:false});
+      explosaoConfete();
       return;
     }
   }
   if(!dados.tabuleiro.includes("")){
     info.textContent="🤝 Empate!";
+    explosaoConfete();
     jogoRef.update({ativo:false});
   }
 }
 
+function explosaoConfete(){
+  for(let i=0;i<100;i++){
+    const confete = document.createElement("div");
+    confete.classList.add("confete");
+    confete.style.left = Math.random()*100 + "vw";
+    confete.style.backgroundColor = `hsl(${Math.random()*360}, 100%, 50%)`;
+    confete.style.animationDuration = (2 + Math.random()*2) + "s";
+    document.body.appendChild(confete);
+    setTimeout(()=> confete.remove(), 4000);
+  }
+}
+
 function resetar(){
+  meuSimbolo = sortearSimbolos();
   jogoRef.set({
     tabuleiro:["","","","","","","","",""],
     turno:"X",
@@ -163,7 +193,6 @@ h2 { font-size:5vw; margin:10px 0; }
   max-height:120px; 
   background:#333; 
   font-size:8vw; 
-  max-font-size:50px;
   display:flex; 
   justify-content:center; 
   align-items:center; 
@@ -189,6 +218,23 @@ button {
   font-size:3vw; 
   color:#ccc; 
   margin-bottom:2vw;
+}
+
+/* Confete */
+.confete {
+  position: fixed;
+  top: -10px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  pointer-events: none;
+  animation-name: cair;
+  animation-timing-function: ease-out;
+}
+
+@keyframes cair {
+  0% { transform: translateY(0) rotate(0deg); opacity:1; }
+  100% { transform: translateY(100vh) rotate(720deg); opacity:0; }
 }
 </style>
 
