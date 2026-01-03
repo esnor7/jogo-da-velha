@@ -22,6 +22,18 @@
   <div class="casa" onclick="jogar(8)"></div>
 </div>
 
+<!-- Controle de Música -->
+<div id="controleMusica">
+  <label for="volumeMusica">Volume da música:</label>
+  <select id="volumeMusica" onchange="ajustarVolume()">
+    <option value="0">Mutar</option>
+    <option value="0.05">5%</option>
+    <option value="0.1">10%</option>
+    <option value="0.15" selected>15%</option>
+    <option value="0.2">20%</option>
+  </select>
+</div>
+
 <button onclick="resetar()">Reiniciar</button>
 
 <p id="rodapeJogo">
@@ -55,7 +67,6 @@ const jogoId = params.get("id");
 
 let usuario = params.get("usuario");
 if(!usuario) usuario = sessionStorage.getItem("usuario")?.trim();
-
 if(!usuario || (usuario !== j1 && usuario !== j2)){
   alert("Você não está em uma partida! Voltando à página inicial.");
   window.location.href = "index.html";
@@ -71,12 +82,17 @@ const jogoRef = db.ref("jogos/" + jogoId);
 const info = document.getElementById("info");
 const casas = document.querySelectorAll(".casa");
 const musicaFundo = document.getElementById("musicaFundo");
-musicaFundo.volume = 0.15; // volume baixinho
 
-// Tenta autoplay; se bloqueado, espera interação
+// volume inicial
+musicaFundo.volume = 0.15;
 musicaFundo.play().catch(()=> {
   document.body.addEventListener("click", ()=> musicaFundo.play(), {once:true});
 });
+
+// ajustar volume via select
+function ajustarVolume(){
+  musicaFundo.volume = parseFloat(document.getElementById("volumeMusica").value);
+}
 
 const vitorias = [
   [0,1,2],[3,4,5],[6,7,8],
@@ -125,19 +141,38 @@ jogoRef.on("value", snap => {
   verificarFim(dados);
 });
 
+// Cria overlay central de vitória/derrota
+function mostrarMensagemCentral(mensagem, cor){
+  let overlay = document.getElementById("overlayMensagem");
+  if(!overlay){
+    overlay = document.createElement("div");
+    overlay.id = "overlayMensagem";
+    document.body.appendChild(overlay);
+  }
+  overlay.textContent = mensagem;
+  overlay.style.color = cor;
+  overlay.style.display = "flex";
+}
+
 function verificarFim(dados){
+  let vencedor = null;
   for(let [a,b,c] of vitorias){
     if(dados.tabuleiro[a] && dados.tabuleiro[a]===dados.tabuleiro[b] && dados.tabuleiro[a]===dados.tabuleiro[c]){
-      info.textContent = `🏆 Vencedor: ${dados.tabuleiro[a]==="X"?dados.j1:dados.j2}`;
+      vencedor = dados.tabuleiro[a] === "X" ? dados.j1 : dados.j2;
       jogoRef.update({ativo:false});
-      explosaoConfete();
+      if(vencedor === usuario){
+        mostrarMensagemCentral("🏆 Vitória!", "lime");
+        explosaoConfete();
+      } else {
+        mostrarMensagemCentral("💀 Derrota!", "red");
+      }
       return;
     }
   }
   if(!dados.tabuleiro.includes("")){
-    info.textContent="🤝 Empate!";
-    explosaoConfete();
     jogoRef.update({ativo:false});
+    mostrarMensagemCentral("🤝 Empate!", "orange");
+    explosaoConfete();
   }
 }
 
@@ -155,6 +190,8 @@ function explosaoConfete(){
 
 function resetar(){
   meuSimbolo = sortearSimbolos();
+  let overlay = document.getElementById("overlayMensagem");
+  if(overlay) overlay.style.display = "none";
   jogoRef.set({
     tabuleiro:["","","","","","","","",""],
     turno:"X",
@@ -214,6 +251,11 @@ button {
   margin-bottom:3vw;
 }
 
+#controleMusica {
+  margin-bottom:3vw;
+  font-size:4vw;
+}
+
 #rodapeJogo { 
   font-size:3vw; 
   color:#ccc; 
@@ -235,6 +277,23 @@ button {
 @keyframes cair {
   0% { transform: translateY(0) rotate(0deg); opacity:1; }
   100% { transform: translateY(100vh) rotate(720deg); opacity:0; }
+}
+
+/* Overlay central vitória/derrota */
+#overlayMensagem {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  font-size: 10vw;
+  font-weight: bold;
+  display: none;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  pointer-events: none;
+  z-index: 9999;
 }
 </style>
 
